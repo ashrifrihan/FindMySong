@@ -53,16 +53,26 @@ export async function saveSongsToCatalog(items: Result[]) {
 /**
  * Layer 3: Query own song catalog by sound key or text similarity before Deezer.
  */
+/**
+ * Layer 3: Query own song catalog by sound key or text similarity before music APIs.
+ */
 export async function queryOwnCatalog(soundKey: string, cleanQuery: string): Promise<Result[]> {
   const matches: Result[] = [];
   const seenKeys = new Set<string>();
 
+  // Sanitize cleanQuery to prevent PostgREST syntax errors caused by commas, parentheses, etc.
+  const sanitized = cleanQuery.replace(/[,()"\\]/g, " ").replace(/\s+/g, " ").trim();
+
   // 1. Try Supabase query
   try {
-    const { data, error } = await db()
-      .from("songs")
-      .select("*")
-      .or(`sound_key.eq.${soundKey},title.ilike.%${cleanQuery}%`)
+    let query = db().from("songs").select("*");
+    if (sanitized) {
+      query = query.or(`sound_key.eq.${soundKey},title.ilike.%${sanitized}%`);
+    } else {
+      query = query.eq("sound_key", soundKey);
+    }
+
+    const { data, error } = await query
       .order("copy_count", { ascending: false })
       .limit(15);
 
@@ -143,16 +153,39 @@ export async function getLearnedCorrection(query: string, soundKey: string): Pro
 }
 
 /**
- * Layer 6: Get copies map for popular tracks to boost them in ranking.
+ * Layer 6: Get copies map for popular tracks in this search to boost them in ranking.
+ * Optimised to filter by candidate ISRCs instead of downloading the whole table.
  */
-export async function getTrackCopyCounts(): Promise<Map<string, number>> {
-  const map = new Map<string, number>(localCopiesMap);
+export async function getTrackCopyCounts(isrcs?: string[]): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+
+  if (isrcs && isrcs.length === 0) {
+    return map;
+  }
+
+  // Seed with local in-memory counts
+  if (isrcs) {
+    for (const code of isrcs) {
+      const c = localCopiesMap.get(code);
+      if (c) map.set(code, c);
+    }
+  } else {
+    for (const [k, v] of localCopiesMap.entries()) {
+      map.set(k, v);
+    }
+  }
 
   try {
-    const { data } = await db()
+    let query = db()
       .from("songs")
       .select("isrc, copy_count")
       .gt("copy_count", 0);
+
+    if (isrcs && isrcs.length > 0) {
+      query = query.in("isrc", isrcs);
+    }
+
+    const { data } = await query;
 
     if (Array.isArray(data)) {
       for (const row of data) {

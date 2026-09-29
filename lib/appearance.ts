@@ -19,19 +19,37 @@ export function readTint() {
 // ─── Dark / Light Mode ────────────────────────────────────────
 export const THEME_KEY = "findmysong:theme";
 
-/** Inlined in <head> — runs before paint to avoid flash */
-export const themeBootScript = `try{var th=localStorage.getItem('${THEME_KEY}');if(th)document.documentElement.setAttribute('data-theme',th)}catch(e){}`;
+/**
+ * Inlined in <head> — runs before first paint to completely avoid theme flash.
+ * Always resolves and sets data-theme to either 'dark' or 'light'.
+ * Also synchronizes the browser meta theme-color bar and listens to live OS changes.
+ */
+export const themeBootScript = `try{var s=localStorage.getItem('${THEME_KEY}');var d=s==='light'||s==='dark'?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',d==='dark'?'#111118':'#f4f6fb');window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){if(!localStorage.getItem('${THEME_KEY}')){var n=e.matches?'dark':'light';document.documentElement.setAttribute('data-theme',n);var mc=document.querySelector('meta[name="theme-color"]');if(mc)mc.setAttribute('content',n==='dark'?'#111118':'#f4f6fb');}});}catch(e){}`;
 
 export type Theme = "light" | "dark" | "system";
+
+export function syncMetaThemeColor(isDark: boolean) {
+  const color = isDark ? "#111118" : "#f4f6fb";
+  let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("name", "theme-color");
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", color);
+}
 
 export function applyTheme(theme: Theme) {
   const root = document.documentElement;
   if (theme === "system") {
-    root.removeAttribute("data-theme");
     try { localStorage.removeItem(THEME_KEY); } catch {}
+    const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    root.setAttribute("data-theme", isDark ? "dark" : "light");
+    syncMetaThemeColor(isDark);
   } else {
     root.setAttribute("data-theme", theme);
     try { localStorage.setItem(THEME_KEY, theme); } catch {}
+    syncMetaThemeColor(theme === "dark");
   }
 }
 

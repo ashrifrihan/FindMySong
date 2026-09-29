@@ -28,6 +28,24 @@ export default function MobileAuthModal({
 
   useEffect(() => {
     if (!isOpen) return;
+
+    // Lock background scroll on mobile/desktop while modal is open
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
     fetch("/api/auth/user")
       .then((r) => r.json())
       .then((d) => {
@@ -86,7 +104,15 @@ export default function MobileAuthModal({
   }
 
   return createPortal(
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div
+      className="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="modal-card">
         <button
           type="button"

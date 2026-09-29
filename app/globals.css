@@ -1417,17 +1417,30 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
 /* ════════════════════════════════════
    MOBILE AUTH MODAL (Unlimited searches)
    ════════════════════════════════════ */
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 999;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  animation: fade-up 200ms ease-out both;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: modal-fade-in 180ms ease-out both;
 }
 
 .modal-card {
@@ -1439,6 +1452,9 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   width: 100%;
   max-width: 440px;
   padding: 28px 24px 24px;
+  margin: auto;
+  box-sizing: border-box;
+  animation: modal-card-in 220ms var(--ease-out) both;
 }
 
 .modal-close {
@@ -1455,6 +1471,7 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 120ms ease;
+  z-index: 2;
 }
 
 .modal-close:hover {
@@ -1490,6 +1507,8 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   font-size: 0.875rem;
   color: var(--text-2);
   line-height: 1.45;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .modal-form {
@@ -1521,6 +1540,7 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   font-size: 0.9375rem;
   outline: none;
   transition: border-color 150ms ease;
+  box-sizing: border-box;
 }
 
 .name-input:focus {
@@ -1531,10 +1551,13 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   display: flex;
   gap: 8px;
   width: 100%;
+  min-width: 0;
 }
 
 .country-select {
-  padding: 10px 10px;
+  flex: 0 0 auto;
+  max-width: 120px;
+  padding: 10px 8px;
   border-radius: var(--r-md);
   border: 1.5px solid var(--border-2);
   background: var(--surface-2);
@@ -1543,11 +1566,14 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   font-weight: 600;
   outline: none;
   cursor: pointer;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
 }
 
 .phone-number-input {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
+  width: 100%;
   padding: 10px 14px;
   border-radius: var(--r-md);
   border: 1.5px solid var(--border-2);
@@ -1556,6 +1582,7 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   font-size: 0.9375rem;
   outline: none;
   transition: border-color 150ms ease;
+  box-sizing: border-box;
 }
 
 .phone-number-input:focus {
@@ -1563,6 +1590,7 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
 }
 
 .modal-submit-btn {
+  width: 100%;
   padding: 12px 18px;
   border-radius: var(--r-full);
   background: var(--blue);
@@ -1571,6 +1599,8 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   font-size: 0.9375rem;
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
   transition: transform 120ms ease, opacity 120ms ease;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .modal-submit-btn:disabled {
@@ -1636,6 +1666,7 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   transition: transform 160ms var(--ease-out), background 160ms ease, border-color 160ms ease;
   cursor: pointer;
   text-decoration: none;
+  box-sizing: border-box;
 }
 .google-auth-btn:hover {
   background: var(--surface-2);
@@ -1673,6 +1704,7 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   background: var(--surface);
   transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
   cursor: pointer;
+  box-sizing: border-box;
 }
 .modal-signout-btn:hover {
   color: var(--red);
@@ -1685,6 +1717,78 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   text-align: center;
   line-height: 1.4;
   margin-top: 8px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Modal mobile responsive */
+@media (max-width: 480px) {
+  .modal-backdrop {
+    padding: 12px;
+  }
+  .modal-card {
+    padding: 22px 16px 18px;
+    border-radius: var(--r-xl);
+  }
+  .modal-close {
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+  .modal-icon-wrap {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 8px;
+  }
+  .modal-icon-wrap svg {
+    width: 20px;
+    height: 20px;
+  }
+  .modal-title {
+    font-size: 1.15rem;
+    margin-bottom: 4px;
+  }
+  .modal-sub {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+  .google-auth-btn {
+    padding: 11px 14px;
+    font-size: 0.875rem;
+    gap: 8px;
+  }
+  .google-icon-svg {
+    width: 18px;
+    height: 18px;
+  }
+  .phone-input-row {
+    gap: 6px;
+  }
+  .country-select {
+    max-width: 104px;
+    padding: 10px 4px;
+    font-size: 0.8125rem;
+  }
+  .phone-number-input {
+    padding: 10px 10px;
+    font-size: 0.875rem;
+  }
+  .name-input {
+    padding: 10px 12px;
+    font-size: 0.875rem;
+  }
+  .modal-submit-btn {
+    padding: 11px 14px;
+    font-size: 0.875rem;
+    white-space: normal;
+    line-height: 1.3;
+  }
+  .modal-footer-note {
+    font-size: 0.6875rem;
+    line-height: 1.35;
+  }
 }
 
 /* ════════════════════════════════════

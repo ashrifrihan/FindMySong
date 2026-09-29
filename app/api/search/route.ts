@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse, after } from "next/server";
-import { DAILY_LIMIT, consume, remaining, getQuotaContext } from "@/lib/quota";
+import {
+  DAILY_LIMIT,
+  consume,
+  remaining,
+  getQuotaContext,
+  parseQuotaCookie,
+  formatQuotaCookie,
+} from "@/lib/quota";
 import { db } from "@/lib/supabase";
 
 import type { Result, SearchCorrection } from "@/lib/types";
@@ -164,12 +171,16 @@ export async function GET(req: NextRequest) {
 
   const verifiedUser = await getVerifiedUser(req);
   const phoneCookie = req.cookies.get("findmysong_phone")?.value;
-  const quotaCtx = getQuotaContext(req.headers, verifiedUser?.id, phoneCookie);
+  const deviceId = req.cookies.get("tc_device")?.value;
+  const quotaCookie = req.cookies.get("fms_quota")?.value;
+  const cookieCount = parseQuotaCookie(quotaCookie);
+
+  const quotaCtx = getQuotaContext(req.headers, verifiedUser?.id, phoneCookie, deviceId);
   const cacheKey = `${type}:${parsed.cleaned}`;
 
   // ── Step 2: Run all database checks concurrently ──
   // Quota check, cache check, learned corrections, and own song catalog run simultaneously.
-  const quotaPromise = remaining(quotaCtx.key, quotaCtx.limit).catch(() => quotaCtx.limit);
+  const quotaPromise = remaining(quotaCtx.key, quotaCtx.limit, cookieCount).catch(() => quotaCtx.limit);
   const cachePromise = Promise.resolve(
     db()
       .from("search_cache")
@@ -208,19 +219,35 @@ export async function GET(req: NextRequest) {
     const bestMatch = cachedResults.length > 0 && cachedResults[0].isBestMatch ? cachedResults[0] : undefined;
 
     let remainingQuota = currentLeft;
-    try {
-      remainingQuota = await consume(quotaCtx.key, quotaCtx.limit);
-    } catch {
-      remainingQuota = Math.max(0, currentLeft - 1);
+    let cookiePayload = "";
+    if (!quotaCtx.isMember) {
+      try {
+        const c = await consume(quotaCtx.key, quotaCtx.limit, cookieCount);
+        remainingQuota = c.remaining;
+        cookiePayload = c.cookiePayload;
+      } catch {
+        remainingQuota = Math.max(0, currentLeft - 1);
+        cookiePayload = formatQuotaCookie(cookieCount + 1);
+      }
     }
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       results: cachedResults,
       bestMatch,
       remaining: remainingQuota,
       limit: quotaCtx.limit,
       isMember: quotaCtx.isMember,
     });
+
+    if (cookiePayload && !quotaCtx.isMember) {
+      res.cookies.set("fms_quota", cookiePayload, {
+        path: "/",
+        maxAge: 24 * 60 * 60,
+        sameSite: "lax",
+        httpOnly: true,
+      });
+    }
+    return res;
   }
 
   // ── Step 3: Music Service Search (Spotify First, Deezer as Backup) ──
@@ -343,15 +370,19 @@ export async function GET(req: NextRequest) {
 
   // ── Step 8: Consume quota only when results are returned ──
   let remainingQuota = currentLeft;
-  if (finalResults.length > 0) {
+  let cookiePayload = "";
+  if (finalResults.length > 0 && !quotaCtx.isMember) {
     try {
-      remainingQuota = await consume(quotaCtx.key, quotaCtx.limit);
+      const c = await consume(quotaCtx.key, quotaCtx.limit, cookieCount);
+      remainingQuota = c.remaining;
+      cookiePayload = c.cookiePayload;
     } catch {
       remainingQuota = Math.max(0, currentLeft - 1);
+      cookiePayload = formatQuotaCookie(cookieCount + 1);
     }
   }
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     results: finalResults,
     bestMatch,
     remaining: remainingQuota,
@@ -359,4 +390,14 @@ export async function GET(req: NextRequest) {
     isMember: quotaCtx.isMember,
     correction,
   });
+
+  if (cookiePayload && !quotaCtx.isMember) {
+    res.cookies.set("fms_quota", cookiePayload, {
+      path: "/",
+      maxAge: 24 * 60 * 60,
+      sameSite: "lax",
+      httpOnly: true,
+    });
+  }
+  return res;
 }

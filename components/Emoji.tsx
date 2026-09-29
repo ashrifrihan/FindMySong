@@ -40,6 +40,16 @@ export const APPLE_EMOJI: Record<string, string> = {
   "🐷": "1f437",
 
   // UI / actions
+  "⚡": "26a1",
+  "🎯": "1f3af",
+  "🇱🇰": "1f1f1-1f1f0",
+  "🇮🇳": "1f1ee-1f1f3",
+  "💡": "1f4a1",
+  "🔥": "1f525",
+
+  "📱": "1f4f1",
+  "🚀": "1f680",
+  "🎬": "1f3ac",
   "✨": "2728",
   "❤️": "2764-fe0f",
   "🔖": "1f516",
@@ -47,6 +57,7 @@ export const APPLE_EMOJI: Record<string, string> = {
   "✅": "2705",
   "⭐": "2b50",
 };
+
 
 /** Convert any emoji character to its Apple CDN URL automatically */
 function emojiToCdnUrl(emoji: string): string | null {

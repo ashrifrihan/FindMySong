@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUpIcon, BoltIcon, SearchIcon, NoteIcon } from "./Icons";
+import { ArrowUpIcon, BoltIcon, SearchIcon, NoteIcon, SparklesIcon } from "./Icons";
+import MobileAuthModal from "./MobileAuthModal";
 
 export const QUOTA_EVENT = "findmysong:quota";
 
@@ -14,6 +15,13 @@ interface SuggestionItem {
   codeType?: string;
   kind?: string;
 }
+
+const SEARCH_MODES = [
+  { id: "all", label: "All", placeholder: "Songs, artists, Tamil hits, Baila, BGMs, movies…" },
+  { id: "song", label: "Song", placeholder: "Search by song (e.g. Rathima, Hukum, Naa Ready, Kaithi)…" },
+  { id: "artist", label: "Artist", placeholder: "Search by artist (e.g. Anirudh, AR Rahman, Yuvan, Harris)…" },
+  { id: "album", label: "Album / Movie", placeholder: "Search by movie or album (e.g. Leo, Jailer, Master, Vikram)…" },
+];
 
 export default function SearchForm({
   initialQ = "",
@@ -28,8 +36,11 @@ export default function SearchForm({
 }) {
   const router = useRouter();
   const [q, setQ] = useState(initialQ);
+  const [searchMode, setSearchMode] = useState(type || "all");
   const [left, setLeft] = useState<number | null>(null);
   const [limit, setLimit] = useState(10);
+  const [isMember, setIsMember] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Layer 7: Typing suggestions state
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
@@ -39,16 +50,24 @@ export default function SearchForm({
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => setQ(initialQ), [initialQ]);
+  useEffect(() => setSearchMode(type || "all"), [type]);
 
   useEffect(() => {
     fetch("/api/quota")
       .then((r) => r.json())
       .then((d) => {
         if (typeof d.remaining === "number") setLeft(d.remaining);
-        setLimit(d.limit);
+        if (typeof d.limit === "number") setLimit(d.limit);
+        if (d.isMember) setIsMember(true);
       })
       .catch(() => {});
-    const onQuota = (e: Event) => setLeft((e as CustomEvent<number>).detail);
+
+    const onQuota = (e: Event) => {
+      const remainingVal = (e as CustomEvent<number>).detail;
+      setLeft(remainingVal);
+      if (remainingVal >= 900) setIsMember(true);
+    };
+
     window.addEventListener(QUOTA_EVENT, onQuota);
     return () => window.removeEventListener(QUOTA_EVENT, onQuota);
   }, []);
@@ -100,10 +119,16 @@ export default function SearchForm({
 
   function submitQuery(queryText: string) {
     const v = queryText.trim();
-    if (!v || left === 0) return;
+    if (!v) return;
+
+    if (left === 0 && !isMember) {
+      setModalOpen(true);
+      return;
+    }
+
     setShowSuggestions(false);
     (document.activeElement as HTMLElement | null)?.blur();
-    router.push(`/search?q=${encodeURIComponent(v)}&type=${type}`);
+    router.push(`/search?q=${encodeURIComponent(v)}&type=${searchMode}`);
   }
 
   function submit(e: React.FormEvent) {
@@ -137,14 +162,34 @@ export default function SearchForm({
     submitQuery(item.title);
   }
 
-  const out = left === 0;
+  const out = left === 0 && !isMember;
   const isHero = variant === "hero";
   const barClass = isHero ? "hero-search" : "search-bar";
   const goClass = isHero ? "hero-go" : "search-go";
   const quotaClass = isHero ? "hero-quota" : "search-quota";
 
+  const currentPlaceholder =
+    SEARCH_MODES.find((m) => m.id === searchMode)?.placeholder ||
+    "Songs, artists, BGMs, movies or albums…";
+
   return (
-    <div className="search-form-wrap" ref={containerRef}>
+    <div className={`search-form-wrap${isHero ? " hero-mode-wrap" : ""}`} ref={containerRef}>
+      {/* Search Mode Toggle: Search by Artist, Song, Album or All */}
+      <div className="search-mode-selector" role="tablist" aria-label="Search option">
+        {SEARCH_MODES.map((mode) => (
+          <button
+            key={mode.id}
+            type="button"
+            role="tab"
+            aria-selected={searchMode === mode.id}
+            className={`search-mode-pill pressable${searchMode === mode.id ? " active" : ""}`}
+            onClick={() => setSearchMode(mode.id)}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+
       <form className={barClass} onSubmit={submit} role="search">
         <SearchIcon size={20} />
         <label htmlFor="q" className="sr-only">
@@ -154,7 +199,7 @@ export default function SearchForm({
           id="q"
           suppressHydrationWarning
           type="search"
-          placeholder="Songs, artists or albums…"
+          placeholder={currentPlaceholder}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onFocus={() => {
@@ -170,7 +215,7 @@ export default function SearchForm({
           className={`${goClass} pressable`}
           type="submit"
           suppressHydrationWarning
-          disabled={!q.trim() || out}
+          disabled={!q.trim()}
           aria-label="Search"
         >
           <ArrowUpIcon size={20} />
@@ -210,28 +255,47 @@ export default function SearchForm({
       {/* Quota indicator - Apple iOS widget style (only show in hero) */}
       {isHero && (
         <div className={`${quotaClass}${out ? " empty" : ""}`} aria-live="polite">
-          <div className="quota-pill">
+          <button
+            type="button"
+            className="quota-pill pressable"
+            onClick={() => setModalOpen(true)}
+            aria-label={isMember ? "Unlimited member status" : "Daily search quota. Click for unlimited"}
+          >
             <span className="quota-icon">
-              <BoltIcon size={14} />
+              {isMember ? <SparklesIcon size={13} /> : <BoltIcon size={14} />}
             </span>
-            <div className="quota-track" aria-hidden>
-              <div
-                className="quota-fill"
-                style={{
-                  width: left === null ? "100%" : `${(left / limit) * 100}%`,
-                }}
-              />
-            </div>
+            {!isMember && (
+              <div className="quota-track" aria-hidden>
+                <div
+                  className="quota-fill"
+                  style={{
+                    width: left === null ? "100%" : `${(left / limit) * 100}%`,
+                  }}
+                />
+              </div>
+            )}
             <span className="quota-text">
-              {left === null
-                ? `${limit} left`
+              {isMember
+                ? "✨ Unlimited Searches"
+                : left === null
+                ? `${limit} free left`
                 : out
-                ? "0 left"
-                : `${left} left`}
+                ? "0 left · Unlock Unlimited"
+                : `${left} left · Unlock Unlimited`}
             </span>
-          </div>
+          </button>
         </div>
       )}
+
+      {/* Mobile Auth Modal for unlocking Unlimited Searches */}
+      <MobileAuthModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={() => {
+          setIsMember(true);
+          setLeft(999);
+        }}
+      />
     </div>
   );
 }

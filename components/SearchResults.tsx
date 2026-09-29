@@ -9,6 +9,7 @@ import type { Result, SearchCorrection, SearchResponse } from "@/lib/types";
 const TABS = [
   { id: "all", label: "All" },
   { id: "song", label: "Songs" },
+  { id: "artist", label: "Artists" },
   { id: "album", label: "Albums" },
 ];
 
@@ -29,9 +30,12 @@ export default function SearchResults({
     bestMatch?: Result;
   }>({ loading: true });
 
+  // Pagination: load 10 songs at a time
+  const [visibleCount, setVisibleCount] = useState(10);
   const lastKey = useRef("");
 
   useEffect(() => {
+    setVisibleCount(10);
     const key = `${type}::${q}::exact=${exact}`;
     if (!q || lastKey.current === key) return;
     lastKey.current = key;
@@ -90,6 +94,10 @@ export default function SearchResults({
   const songs = results.filter((r) => r.kind === "song");
   const albums = results.filter((r) => r.kind === "album");
 
+  // Display initial 10 songs with "Load more"
+  const displayedSongs = songs.slice(0, visibleCount);
+  const hasMoreSongs = songs.length > visibleCount;
+
   return (
     <>
       <nav className="chips" aria-label="Result type">
@@ -147,19 +155,35 @@ export default function SearchResults({
         <div className="reveal" key={`${type}-${q}`}>
           {type === "all" ? (
             <>
-              {songs.length > 0 && (
+              {displayedSongs.length > 0 && (
                 <>
-                  <h2 className="group-title">Songs</h2>
+                  <h2 className="group-title">
+                    Songs {songs.length > 10 && `(${displayedSongs.length}/${songs.length})`}
+                  </h2>
                   <ul className="list">
-                    {songs.map((r) => (
+                    {displayedSongs.map((r) => (
                       <ResultCard key={r.key} item={r} query={q} />
                     ))}
                   </ul>
+
+                  {/* Load more button */}
+                  {hasMoreSongs && (
+                    <div className="load-more-wrap">
+                      <button
+                        type="button"
+                        className="load-more-btn pressable"
+                        onClick={() => setVisibleCount((prev) => prev + 10)}
+                      >
+                        Load more songs (+10)
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
+
               {albums.length > 0 && (
                 <>
-                  <h2 className="group-title">Albums</h2>
+                  <h2 className="group-title">Albums & Soundtracks</h2>
                   <ul className="list">
                     {albums.map((r) => (
                       <ResultCard key={r.key} item={r} query={q} />
@@ -169,12 +193,36 @@ export default function SearchResults({
               )}
             </>
           ) : (
-            <ul className="list">
-              {results.map((r) => (
-                <ResultCard key={r.key} item={r} query={q} />
-              ))}
-            </ul>
+            <>
+              <ul className="list">
+                {(type === "song" ? displayedSongs : results).map((r) => (
+                  <ResultCard key={r.key} item={r} query={q} />
+                ))}
+              </ul>
+
+              {/* Load more for song tab */}
+              {type === "song" && hasMoreSongs && (
+                <div className="load-more-wrap">
+                  <button
+                    type="button"
+                    className="load-more-btn pressable"
+                    onClick={() => setVisibleCount((prev) => prev + 10)}
+                  >
+                    Load more songs (+10)
+                  </button>
+                </div>
+              )}
+            </>
           )}
+
+          {/* Instagram regional licensing disclaimer note */}
+          <div className="ig-disclaimer-note" role="note">
+            <span className="ig-disclaimer-icon">💡</span>
+            <p className="ig-disclaimer-text">
+              Copy the code and paste directly into Instagram Music sticker search.{" "}
+              <em>If a song doesn&apos;t appear in Instagram, it may not be licensed in your country or may be restricted on business accounts.</em>
+            </p>
+          </div>
         </div>
       )}
     </>

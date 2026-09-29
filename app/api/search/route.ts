@@ -156,6 +156,8 @@ export async function GET(req: NextRequest) {
   const rawType = req.nextUrl.searchParams.get("type") || "all";
   const type = ["all", "song", "album", "artist"].includes(rawType) ? rawType : "all";
   const forceExact = req.nextUrl.searchParams.get("exact") === "true";
+  const langPref = req.nextUrl.searchParams.get("lang") || "tamil";
+  const enableTamilBoost = langPref !== "all";
 
   if (!rawQ) {
     return NextResponse.json({ error: "Type a song, artist or album." }, { status: 400 });
@@ -176,7 +178,7 @@ export async function GET(req: NextRequest) {
   const cookieCount = parseQuotaCookie(quotaCookie);
 
   const quotaCtx = getQuotaContext(req.headers, verifiedUser?.id, phoneCookie, deviceId);
-  const cacheKey = `${type}:${parsed.cleaned}`;
+  const cacheKey = `${type}:${parsed.cleaned}:${langPref}`;
 
   // ── Step 2: Run all database checks concurrently ──
   // Quota check, cache check, learned corrections, and own song catalog run simultaneously.
@@ -265,11 +267,21 @@ export async function GET(req: NextRequest) {
 
   // Primary: Spotify with India market (IN) covers complete South Asian catalog and includes ISRCs natively
   const spotifyPromises: Promise<Result[]>[] = [];
+  const shouldSearchTamilTwin =
+    enableTamilBoost &&
+    !/\b(tamil|tamizh|telugu|hindi|kannada|malayalam|english)\b/i.test(queryToSearch);
+
   if (type === "all" || type === "song" || type === "artist") {
     spotifyPromises.push(searchSpotifyTracks(queryToSearch, 30));
+    if (shouldSearchTamilTwin) {
+      spotifyPromises.push(searchSpotifyTracks(`${queryToSearch} tamil`, 20));
+    }
   }
   if (type === "all" || type === "album" || type === "artist") {
     spotifyPromises.push(searchSpotifyAlbums(queryToSearch, 10));
+    if (shouldSearchTamilTwin) {
+      spotifyPromises.push(searchSpotifyAlbums(`${queryToSearch} tamil`, 8));
+    }
   }
 
   const spotifyResults = (await Promise.all(spotifyPromises)).flat();
@@ -304,9 +316,15 @@ export async function GET(req: NextRequest) {
     const dzPromises: Promise<Result[]>[] = [];
     if (type === "all" || type === "song" || type === "artist") {
       dzPromises.push(fetchDeezerTracksLight(queryToSearch, 25));
+      if (shouldSearchTamilTwin) {
+        dzPromises.push(fetchDeezerTracksLight(`${queryToSearch} tamil`, 15));
+      }
     }
     if (type === "all" || type === "album" || type === "artist") {
       dzPromises.push(fetchDeezerAlbumsLight(queryToSearch, 10));
+      if (shouldSearchTamilTwin) {
+        dzPromises.push(fetchDeezerAlbumsLight(`${queryToSearch} tamil`, 8));
+      }
     }
     const dzResults = (await Promise.all(dzPromises)).flat();
     allCandidates.push(...dzResults);
@@ -317,7 +335,7 @@ export async function GET(req: NextRequest) {
     .map((c) => c.code)
     .filter((c): c is string => Boolean(c));
   const copyCounts = await getTrackCopyCounts(candidateIsrcs);
-  const ranked = scoreAndRankResults(allCandidates, parsed, copyCounts);
+  const ranked = scoreAndRankResults(allCandidates, parsed, copyCounts, enableTamilBoost);
   let finalResults = ranked.results;
   let bestMatch = ranked.bestMatch;
 

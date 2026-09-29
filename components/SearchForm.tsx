@@ -26,17 +26,20 @@ const SEARCH_MODES = [
 export default function SearchForm({
   initialQ = "",
   type = "all",
+  initialLang = "tamil",
   autoFocus = false,
   variant = "default", // "hero" | "default"
 }: {
   initialQ?: string;
   type?: string;
+  initialLang?: string;
   autoFocus?: boolean;
   variant?: "hero" | "default";
 }) {
   const router = useRouter();
   const [q, setQ] = useState(initialQ);
   const [searchMode, setSearchMode] = useState(type || "all");
+  const [langPref, setLangPref] = useState(initialLang || "tamil");
   const [left, setLeft] = useState<number | null>(null);
   const [limit, setLimit] = useState(10);
   const [isMember, setIsMember] = useState(false);
@@ -52,10 +55,29 @@ export default function SearchForm({
   const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("fms_lang_pref");
+      if (saved === "tamil" || saved === "all") {
+        setLangPref(saved);
+      }
+    } catch {}
+  }, []);
+
+  function handleLangPrefChange(pref: string) {
+    setLangPref(pref);
+    try {
+      localStorage.setItem("fms_lang_pref", pref);
+    } catch {}
+  }
+
+  useEffect(() => {
     setQ(initialQ);
     setIsNavigating(false);
   }, [initialQ]);
   useEffect(() => setSearchMode(type || "all"), [type]);
+  useEffect(() => {
+    if (initialLang) setLangPref(initialLang);
+  }, [initialLang]);
 
   useEffect(() => {
     fetch("/api/quota")
@@ -134,7 +156,7 @@ export default function SearchForm({
     setIsNavigating(true);
     setShowSuggestions(false);
     (document.activeElement as HTMLElement | null)?.blur();
-    router.push(`/search?q=${encodeURIComponent(v)}&type=${searchMode}`);
+    router.push(`/search?q=${encodeURIComponent(v)}&type=${searchMode}&lang=${langPref}`);
   }
 
   function submit(e: React.FormEvent) {
@@ -180,20 +202,41 @@ export default function SearchForm({
 
   return (
     <div className={`search-form-wrap${isHero ? " hero-mode-wrap" : ""}`} ref={containerRef}>
-      {/* Search Mode Toggle: Search by Artist, Song, Album or All */}
-      <div className="search-mode-selector" role="tablist" aria-label="Search option">
-        {SEARCH_MODES.map((mode) => (
+      {/* Search Mode & Language Ranking Priority */}
+      <div className="search-controls-bar">
+        <div className="search-mode-selector" role="tablist" aria-label="Search option">
+          {SEARCH_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              role="tab"
+              aria-selected={searchMode === mode.id}
+              className={`search-mode-pill pressable${searchMode === mode.id ? " active" : ""}`}
+              onClick={() => setSearchMode(mode.id)}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="lang-pref-selector" role="radiogroup" aria-label="Language ranking priority">
           <button
-            key={mode.id}
             type="button"
-            role="tab"
-            aria-selected={searchMode === mode.id}
-            className={`search-mode-pill pressable${searchMode === mode.id ? " active" : ""}`}
-            onClick={() => setSearchMode(mode.id)}
+            className={`lang-pref-pill pressable${langPref === "tamil" ? " active" : ""}`}
+            onClick={() => handleLangPrefChange("tamil")}
+            title="Tamil songs, film tracks, and South Asian releases ranked first"
           >
-            {mode.label}
+            <span className="lang-icon">🌟</span> Tamil First
           </button>
-        ))}
+          <button
+            type="button"
+            className={`lang-pref-pill pressable${langPref === "all" ? " active" : ""}`}
+            onClick={() => handleLangPrefChange("all")}
+            title="All languages ranked normally"
+          >
+            <span className="lang-icon">🌐</span> All
+          </button>
+        </div>
       </div>
 
       <form className={barClass} onSubmit={submit} role="search">

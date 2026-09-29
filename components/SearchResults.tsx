@@ -17,11 +17,14 @@ export default function SearchResults({
   q,
   type,
   exact = false,
+  initialLang = "tamil",
 }: {
   q: string;
   type: string;
   exact?: boolean;
+  initialLang?: string;
 }) {
+  const [langPref, setLangPref] = useState(initialLang || "tamil");
   const [state, setState] = useState<{
     loading: boolean;
     error?: string;
@@ -35,8 +38,24 @@ export default function SearchResults({
   const lastKey = useRef("");
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("fms_lang_pref");
+      if (saved === "tamil" || saved === "all") {
+        setLangPref(saved);
+      }
+    } catch {}
+  }, []);
+
+  function handleLangChange(pref: string) {
+    setLangPref(pref);
+    try {
+      localStorage.setItem("fms_lang_pref", pref);
+    } catch {}
+  }
+
+  useEffect(() => {
     setVisibleCount(10);
-    const key = `${type}::${q}::exact=${exact}`;
+    const key = `${type}::${q}::exact=${exact}::lang=${langPref}`;
     if (!q || lastKey.current === key) return;
     lastKey.current = key;
 
@@ -58,7 +77,7 @@ export default function SearchResults({
 
     setState({ loading: true });
     const exactParam = exact ? "&exact=true" : "";
-    fetch(`/api/search?q=${encodeURIComponent(q)}&type=${type}${exactParam}`)
+    fetch(`/api/search?q=${encodeURIComponent(q)}&type=${type}&lang=${langPref}${exactParam}`)
       .then(async (r) => {
         const d: SearchResponse & { error?: string } = await r.json();
         if (typeof d.remaining === "number") {
@@ -87,7 +106,7 @@ export default function SearchResults({
         });
       })
       .catch((e) => setState({ loading: false, error: e.message }));
-  }, [q, type, exact]);
+  }, [q, type, exact, langPref]);
 
   const results = state.results ?? [];
   const correction = state.correction;
@@ -100,19 +119,40 @@ export default function SearchResults({
 
   return (
     <>
-      <nav className="chips" aria-label="Result type">
-        {TABS.map((t) => (
-          <Link
-            key={t.id}
-            replace
-            className="glass chip pressable"
-            href={`/search?q=${encodeURIComponent(q)}&type=${t.id}${exact ? "&exact=true" : ""}`}
-            aria-current={type === t.id ? "page" : undefined}
+      <div className="search-results-controls">
+        <nav className="chips" aria-label="Result type">
+          {TABS.map((t) => (
+            <Link
+              key={t.id}
+              replace
+              className="glass chip pressable"
+              href={`/search?q=${encodeURIComponent(q)}&type=${t.id}&lang=${langPref}${exact ? "&exact=true" : ""}`}
+              aria-current={type === t.id ? "page" : undefined}
+            >
+              {t.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="lang-pref-switcher" role="radiogroup" aria-label="Language priority">
+          <button
+            type="button"
+            className={`lang-pref-chip pressable${langPref === "tamil" ? " active" : ""}`}
+            onClick={() => handleLangChange("tamil")}
+            title="Prioritize Tamil originals, film tracks, and South Asian releases"
           >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+            <span className="lang-badge">🌟</span> Tamil First
+          </button>
+          <button
+            type="button"
+            className={`lang-pref-chip pressable${langPref === "all" ? " active" : ""}`}
+            onClick={() => handleLangChange("all")}
+            title="Standard ranking across all languages"
+          >
+            <span className="lang-badge">🌐</span> All
+          </button>
+        </div>
+      </div>
 
       {/* ── Layer 5: "Showing results for..." / "Did you mean...?" banner ── */}
       {!state.loading && correction && !exact && (

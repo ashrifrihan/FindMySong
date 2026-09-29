@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import SearchForm from "@/components/SearchForm";
 import SearchResults from "@/components/SearchResults";
 
-type Props = { searchParams: Promise<{ q?: string; type?: string; exact?: string }> };
+type Props = { searchParams: Promise<{ q?: string; type?: string; exact?: string; lang?: string }> };
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { q } = await searchParams;
@@ -10,7 +10,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 export default async function SearchPage({ searchParams }: Props) {
-  const { q = "", type: rawType = "all", exact = "false" } = await searchParams;
+  const { q = "", type: rawType = "all", exact = "false", lang = "tamil" } = await searchParams;
   const type = ["all", "song", "album"].includes(rawType) ? rawType : "all";
   const query = q.trim();
 
@@ -18,9 +18,9 @@ export default async function SearchPage({ searchParams }: Props) {
     <div>
       <div className="search-header">
         <h1>Search</h1>
-        <SearchForm initialQ={query} type={type} autoFocus={!query} variant="default" />
+        <SearchForm initialQ={query} type={type} initialLang={lang} autoFocus={!query} variant="default" />
       </div>
-      {query && <SearchResults q={query} type={type} exact={exact === "true"} />}
+      {query && <SearchResults q={query} type={type} exact={exact === "true"} initialLang={lang} />}
     </div>
   );
 }

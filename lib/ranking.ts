@@ -14,6 +14,225 @@ const COMPILATION_INDICATORS = [
   /\bthrowback\b/i,
 ];
 
+// Strong Tamil artists/composers who primarily create Tamil music (Big boost: +80)
+const STRONG_TAMIL_ARTISTS = [
+  "anirudh ravichander",
+  "anirudh",
+  "yuvan shankar raja",
+  "yuvan",
+  "harris jayaraj",
+  "g. v. prakash kumar",
+  "g.v. prakash",
+  "gv prakash kumar",
+  "gv prakash",
+  "d. imman",
+  "d imman",
+  "imman",
+  "santhosh narayanan",
+  "hiphop tamizha",
+  "ilaiyaraaja",
+  "ilayaraja",
+  "ilayaraaja",
+  "vijay antony",
+  "sam c.s.",
+  "sam cs",
+  "sam c s",
+  "sean roldan",
+  "ghibran",
+  "vidyasagar",
+  "deva",
+  "dharan kumar",
+  "leon james",
+  "nivas k prasanna",
+  "stephen zechariah",
+  "pradeep kumar",
+  "dhee",
+  "jonita gandhi",
+  "shakthisree gopalan",
+  "chinmayi",
+  "chinmayi sripada",
+  "karthik",
+  "hariharan",
+  "s. p. balasubrahmanyam",
+  "spb",
+  "k. j. yesudas",
+  "kj yesudas",
+  "swarnalatha",
+  "s. janaki",
+  "k. s. chithra",
+  "ks chithra",
+  "chithra",
+  "sivakarthikeyan",
+  "siva karthikeyan",
+  "dhanush",
+  "silambarasan tr",
+  "str",
+  "andrea jeremiah",
+  "mugen rao",
+  "teejay",
+  "asal kolaar",
+  "paal dabba",
+  "ofro",
+  "arivu",
+  "anthakudi ilayaraja",
+  "kapil kapilan",
+  "aditya rk",
+  "sreekanth hariharan",
+  "aswin",
+  "anthony daasan",
+  "velmurugan",
+  "saisharan",
+  "satyaprakash",
+];
+
+// Multi-language artists who work across Tamil, Telugu, Hindi, Malayalam (Moderate boost: +40)
+const MULTI_LANG_TAMIL_ARTISTS = [
+  "a. r. rahman",
+  "a.r. rahman",
+  "ar rahman",
+  "sid sriram",
+  "shreya ghoshal",
+  "anurag kulkarni",
+  "arijit singh",
+  "m. m. keeravani",
+  "m.m. keeravani",
+  "keeravaani",
+  "haricharan",
+  "naresh iyer",
+  "shweta mohan",
+  "vijay prakash",
+  "unni menon",
+  "sadhana sargam",
+  "shankar mahadevan",
+  "benny dayal",
+];
+
+// Known Tamil Record Labels (Boost: +60)
+const TAMIL_RECORD_LABELS = [
+  "think music",
+  "sun pictures",
+  "sony music south",
+  "divo",
+  "u1 records",
+  "noise & grains",
+  "ayngaran",
+  "star music",
+  "lahari music",
+  "saregama tamil",
+  "tips tamil",
+  "musiq247 tamil",
+  "trendmusic",
+  "sun nxt",
+  "v records",
+];
+
+const OTHER_LANG_DUBBED_REGEX = /\b(telugu|hindi|kannada|malayalam)\b/i;
+const TAMIL_SCRIPT_REGEX = /[\u0B80-\u0BFF]/;
+const MALAYALAM_SCRIPT_REGEX = /[\u0D00-\u0D7F]/;
+const TELUGU_SCRIPT_REGEX = /[\u0C00-\u0C7F]/;
+const KANNADA_SCRIPT_REGEX = /[\u0C80-\u0CFF]/;
+const DEVANAGARI_SCRIPT_REGEX = /[\u0900-\u097F]/;
+const NON_TAMIL_REGIONAL_REGEX = /\b(tharattupattu|malayalam|mallu|kannada|telugu|hindi|bhojpuri|punjabi|bengali|marathi|gujarati|ashiq vavad)\b/i;
+const TAMIL_KEYWORD_REGEX = /\b(tamil|tamizh)\b/i;
+const FILM_TAG_REGEX = /\b(from\s+["'‘“][^"'’”]+["'’”]|ost|original motion picture soundtrack|soundtrack)\b/i;
+
+/**
+ * Calculate Tamil relevance boost based on clues:
+ * 1. Tamil script in title (ரதிமா, கண்ணே கண்மணியே) -> +120
+ * 2. "Tamil" in title or album -> +75
+ * 3. Known Tamil composers/singers -> +80 (+40 for multi-language)
+ * 4. Known Tamil labels -> +60
+ * 5. Film soundtrack tag -> +25
+ * 6. ISRC starts with IN or LK -> +30
+ * 7. Non-Tamil scripts (Malayalam, Telugu, etc.) -> -150 push down
+ * 8. Dubbed versions in Telugu/Hindi/Kannada/Malayalam -> -120 push down
+ */
+export function calculateTamilScore(item: Result, cleanQuery: string): number {
+  let boost = 0;
+  const title = (item.title || "").toLowerCase();
+  const album = (item.album || "").toLowerCase();
+  const artist = (item.artist || "").toLowerCase();
+  const qLower = cleanQuery.toLowerCase();
+
+  // If user explicitly asked for Telugu/Hindi/Kannada/Malayalam in their query, do not prioritize Tamil
+  if (OTHER_LANG_DUBBED_REGEX.test(qLower) || NON_TAMIL_REGIONAL_REGEX.test(qLower)) {
+    return 0;
+  }
+
+  // 1. Strong clue: Tamil script in title (ரதிமா, கண்ணே கண்மணியே)
+  if (TAMIL_SCRIPT_REGEX.test(item.title || "")) {
+    boost += 120;
+  }
+
+  // 2. Strong clue: "Tamil" in title or album (e.g. "Kanne Kanmaniye (Tamil)", "– Tamil")
+  if (TAMIL_KEYWORD_REGEX.test(title) || TAMIL_KEYWORD_REGEX.test(album)) {
+    boost += 75;
+  }
+
+  // 3. Known Tamil artists
+  let artistFound = false;
+  for (const a of STRONG_TAMIL_ARTISTS) {
+    if (artist.includes(a)) {
+      boost += 80;
+      artistFound = true;
+      break;
+    }
+  }
+  if (!artistFound) {
+    for (const a of MULTI_LANG_TAMIL_ARTISTS) {
+      if (artist.includes(a)) {
+        boost += 40;
+        break;
+      }
+    }
+  }
+
+  // 4. Known Tamil record labels
+  for (const label of TAMIL_RECORD_LABELS) {
+    if (album.includes(label)) {
+      boost += 60;
+      break;
+    }
+  }
+
+  // 5. Weak clue: Film soundtrack tag "(From 'Leo')"
+  if (FILM_TAG_REGEX.test(item.title || "") || FILM_TAG_REGEX.test(album)) {
+    boost += 25;
+  }
+
+  // 6. Weak clue: ISRC country code IN (India) or LK (Sri Lanka)
+  if (item.code) {
+    const isrcUpper = item.code.trim().toUpperCase();
+    if (isrcUpper.startsWith("IN") || isrcUpper.startsWith("LK")) {
+      boost += 30;
+    }
+  }
+
+  // 7. Decisive push down: Non-Tamil Indian scripts (Malayalam, Telugu, Kannada, Devanagari)
+  if (
+    MALAYALAM_SCRIPT_REGEX.test(item.title || "") ||
+    MALAYALAM_SCRIPT_REGEX.test(item.album || "") ||
+    TELUGU_SCRIPT_REGEX.test(item.title || "") ||
+    KANNADA_SCRIPT_REGEX.test(item.title || "") ||
+    DEVANAGARI_SCRIPT_REGEX.test(item.title || "")
+  ) {
+    boost -= 150;
+  }
+
+  // 8. Push down: Other-language dubbed versions & indicators (Telugu, Hindi, Kannada, Malayalam, Tharattupattu, etc.)
+  if (
+    OTHER_LANG_DUBBED_REGEX.test(title) ||
+    OTHER_LANG_DUBBED_REGEX.test(album) ||
+    NON_TAMIL_REGIONAL_REGEX.test(title) ||
+    NON_TAMIL_REGIONAL_REGEX.test(album) ||
+    NON_TAMIL_REGIONAL_REGEX.test(artist)
+  ) {
+    boost -= 120;
+  }
+
+  return boost;
+}
+
 /**
  * Determine specific version type from title
  */
@@ -99,7 +318,8 @@ export function calculateItemScore(
   item: Result,
   parsed: ParsedQuery,
   querySoundKey: string,
-  userCopiesMap?: Map<string, number>
+  userCopiesMap?: Map<string, number>,
+  enableTamilBoost = true
 ): number {
   let score = 0;
   const cleanQ = parsed.cleaned;
@@ -185,7 +405,9 @@ export function calculateItemScore(
 
   // 6. Has ISRC code boost (indispensable for Instagram)
   if (item.code) {
-    score += 25;
+    score += 65;
+  } else {
+    score -= 90; // Push codeless songs down
   }
 
   // 7. Original release vs compilations
@@ -277,6 +499,11 @@ export function calculateItemScore(
     }
   }
 
+  // 11. Tamil Relevance Scoring Engine (Clues: script, artists, labels, film tags, ISRC country, language downranking)
+  if (enableTamilBoost) {
+    score += calculateTamilScore(item, cleanQ);
+  }
+
   return score;
 }
 
@@ -341,7 +568,8 @@ export function groupSongVersions(songs: Result[]): Result[] {
 export function scoreAndRankResults(
   items: Result[],
   parsed: ParsedQuery,
-  userCopiesMap?: Map<string, number>
+  userCopiesMap?: Map<string, number>,
+  enableTamilBoost = true
 ): { results: Result[]; bestMatch?: Result } {
   const querySoundKey = generateSoundKey(parsed.cleaned);
 
@@ -351,7 +579,7 @@ export function scoreAndRankResults(
   // 2. Score each item
   for (const item of deduplicated) {
     item.soundKey = generateSoundKey(item.title);
-    item.score = calculateItemScore(item, parsed, querySoundKey, userCopiesMap);
+    item.score = calculateItemScore(item, parsed, querySoundKey, userCopiesMap, enableTamilBoost);
   }
 
   // Separate songs and albums
@@ -361,8 +589,22 @@ export function scoreAndRankResults(
   // Step 5: Group song versions
   const groupedSongs = groupSongVersions(songs);
 
+  // Push songs without a code to the bottom:
+  // Songs with valid ISRC codes are prioritized over codeless tracks
+  groupedSongs.sort((a, b) => {
+    const aHasCode = a.code ? 1 : 0;
+    const bHasCode = b.code ? 1 : 0;
+    if (aHasCode !== bHasCode) return bHasCode - aHasCode;
+    return (b.score || 0) - (a.score || 0);
+  });
+
   // Sort albums by score
-  albums.sort((a, b) => (b.score || 0) - (a.score || 0));
+  albums.sort((a, b) => {
+    const aHasCode = a.code ? 1 : 0;
+    const bHasCode = b.code ? 1 : 0;
+    if (aHasCode !== bHasCode) return bHasCode - aHasCode;
+    return (b.score || 0) - (a.score || 0);
+  });
 
   const finalResults = [...groupedSongs, ...albums];
 

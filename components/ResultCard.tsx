@@ -41,6 +41,9 @@ export default function ResultCard({
   item: Result;
   query?: string;
 }) {
+  const [code, setCode] = useState<string | null>(item.code || null);
+  const [year, setYear] = useState<string | undefined>(item.year);
+  const [fetchingCode, setFetchingCode] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -50,6 +53,11 @@ export default function ResultCard({
 
   const audio = useRef<HTMLAudioElement | null>(null);
   const versionAudio = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    setCode(item.code || null);
+    setYear(item.year);
+  }, [item.code, item.year]);
 
   useEffect(() => {
     const sync = () => setSaved(isSaved(item.key));
@@ -91,6 +99,39 @@ export default function ResultCard({
           itemKey: targetItem.key,
         }),
       }).catch(() => {});
+    }
+  }
+
+  async function handleFetchCode() {
+    if (fetchingCode) return;
+    setFetchingCode(true);
+
+    try {
+      const res = await fetch(
+        `/api/track-code?id=${encodeURIComponent(item.key)}&title=${encodeURIComponent(item.title)}&artist=${encodeURIComponent(item.artist)}`
+      );
+      if (!res.ok) throw new Error("Code not available");
+      const data = await res.json();
+      if (data?.code) {
+        setCode(data.code);
+        item.code = data.code;
+        if (data.year) {
+          setYear(data.year);
+          item.year = data.year;
+        }
+
+        // Instantly copy it for the user
+        const textToCopy = `${item.codeType}:${data.code}`;
+        if (await copyText(textToCopy)) {
+          navigator.vibrate?.(8);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }
+      }
+    } catch {
+      alert("Could not locate ISRC code for this track.");
+    } finally {
+      setFetchingCode(false);
     }
   }
 
@@ -200,8 +241,12 @@ export default function ResultCard({
               <span>Best Match</span>
             </div>
           )}
-          <p className="rc-title">{item.title}</p>
-          <p className="rc-artist">{subtitle}</p>
+          <p className="rc-title" title={item.title}>
+            {item.title}
+          </p>
+          <p className="rc-artist" title={subtitle}>
+            {subtitle}
+          </p>
           <div className="rc-meta">
             <span className="rc-badge">
               {item.kind === "song" ? "Song" : "Album"}
@@ -210,7 +255,7 @@ export default function ResultCard({
               <span className="rc-badge version-tag">{item.versionType}</span>
             )}
             {item.explicit && <span className="rc-badge">E</span>}
-            {item.year && <span className="rc-year">{item.year}</span>}
+            {year && <span className="rc-year">{year}</span>}
           </div>
         </div>
 
@@ -228,24 +273,38 @@ export default function ResultCard({
 
       {/* ── Body: code copy button ── */}
       <div className="rc-body">
-        {item.code ? (
+        {code ? (
           <button
             suppressHydrationWarning
             className={`rc-code pressable${copied ? " copied" : ""}`}
-            onClick={() => handleCopy(item)}
-            aria-label={`Copy ${item.codeType} code: ${item.code}`}
+            onClick={() => handleCopy({ ...item, code })}
+            aria-label={`Copy ${item.codeType} code: ${code}`}
           >
             <span className="rc-code-label">{item.codeType}</span>
             <span className="rc-code-value">
-              {copied ? "Copied!" : item.code}
+              {copied ? "Copied!" : code}
             </span>
             {copied ? <CheckIcon size={15} /> : <CopyIcon size={15} />}
           </button>
         ) : (
-          <span className="rc-code none">
+          <button
+            type="button"
+            suppressHydrationWarning
+            className={`rc-code get-code-btn pressable${fetchingCode ? " is-fetching" : ""}`}
+            onClick={handleFetchCode}
+            disabled={fetchingCode}
+            aria-label={`Fetch and copy ${item.codeType} code for ${item.title}`}
+          >
             <span className="rc-code-label">{item.codeType}</span>
-            <span className="rc-code-value">Not available</span>
-          </span>
+            <span className="rc-code-value">
+              {fetchingCode ? "Finding code..." : "Get code"}
+            </span>
+            {fetchingCode ? (
+              <span className="search-btn-spinner mini" aria-hidden />
+            ) : (
+              <SparklesIcon size={14} />
+            )}
+          </button>
         )}
 
         {/* Step 5: Grouped versions toggle button */}

@@ -1,6 +1,7 @@
 import { db } from "./supabase";
 
 export const DAILY_LIMIT = 10;
+export const MEMBER_LIMIT = 999;
 
 const today = () => new Date().toISOString().slice(0, 10); // UTC, matches Supabase current_date
 
@@ -21,21 +22,32 @@ function incLocal(key: string): number {
   return current + 1;
 }
 
-/** Uses one search. Returns searches left after this one, or -1 if the limit is reached. */
-export async function consume(key: string): Promise<number> {
+/**
+ * Uses one search. Returns searches left after this one, or -1 if the limit is reached.
+ */
+export async function consume(key: string, limit = DAILY_LIMIT): Promise<number> {
+  // Members with mobile numbers have unlimited quota
+  if (limit >= MEMBER_LIMIT) {
+    return MEMBER_LIMIT;
+  }
+
   try {
-    const { data, error } = await db().rpc("consume_search", { p_key: key, p_limit: DAILY_LIMIT });
+    const { data, error } = await db().rpc("consume_search", { p_key: key, p_limit: limit });
     if (error) throw new Error(error.message);
     return data as number;
   } catch (err: any) {
     console.warn("Supabase consume_search unavailable or restricted, using memory fallback:", err?.message || err);
     const count = incLocal(key);
-    if (count > DAILY_LIMIT) return -1;
-    return Math.max(0, DAILY_LIMIT - count);
+    if (count > limit) return -1;
+    return Math.max(0, limit - count);
   }
 }
 
-export async function remaining(key: string): Promise<number> {
+export async function remaining(key: string, limit = DAILY_LIMIT): Promise<number> {
+  if (limit >= MEMBER_LIMIT) {
+    return MEMBER_LIMIT;
+  }
+
   try {
     const { data, error } = await db()
       .from("search_quota")
@@ -44,13 +56,38 @@ export async function remaining(key: string): Promise<number> {
       .eq("day", today())
       .maybeSingle();
     if (error) throw error;
-    return Math.max(0, DAILY_LIMIT - (data?.count ?? 0));
+    return Math.max(0, limit - (data?.count ?? 0));
   } catch {
     const count = getLocal(key);
-    return Math.max(0, DAILY_LIMIT - count);
+    return Math.max(0, limit - count);
   }
 }
 
 export function ipFrom(headers: Headers) {
   return headers.get("x-forwarded-for")?.split(",")[0].trim() || headers.get("x-real-ip") || "local";
+}
+
+/**
+ * Extracts quota key, membership state, and applicable daily limit
+ */
+export function getQuotaContext(headers: Headers, phoneCookie?: string | null) {
+  const phone = (phoneCookie || "").replace(/[^\d+]/g, "").trim();
+  const isMember = phone.length >= 8;
+
+  if (isMember) {
+    return {
+      key: `phone:${phone}`,
+      isMember: true,
+      phone,
+      limit: MEMBER_LIMIT,
+    };
+  }
+
+  const ip = ipFrom(headers);
+  return {
+    key: `ip:${ip}`,
+    isMember: false,
+    phone: null,
+    limit: DAILY_LIMIT,
+  };
 }

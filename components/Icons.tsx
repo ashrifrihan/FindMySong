@@ -13,3 +13,6 @@ export const GlassIcon = ({ size }: P) => (<svg {...base(size)}><circle cx="12" 
 export const SunIcon = ({ size }: P) => (<svg {...base(size)} strokeWidth={2}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>);
 export const MoonIcon = ({ size }: P) => (<svg {...base(size)} strokeWidth={2}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>);
 export const BoltIcon = ({ size }: P) => (<svg {...base(size)} strokeWidth={2}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>);
+export const ChevronDownIcon = ({ size }: P) => (<svg {...base(size)} strokeWidth={2}><path d="m6 9 6 6 6-6" /></svg>);
+export const SparklesIcon = ({ size }: P) => (<svg {...base(size)} fill="currentColor" stroke="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" /></svg>);
+

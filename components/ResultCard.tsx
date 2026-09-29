@@ -281,10 +281,20 @@ export default function ResultCard({
             aria-label={`Copy ${item.codeType} code: ${code}`}
           >
             <span className="rc-code-label">{item.codeType}</span>
-            <span className="rc-code-value">
-              {copied ? "Copied!" : code}
+            <span className="rc-code-value">{code}</span>
+            <span className={`rc-copy-cta${copied ? " copied" : ""}`}>
+              {copied ? (
+                <>
+                  <CheckIcon size={14} />
+                  <span>✓ Copied</span>
+                </>
+              ) : (
+                <>
+                  <CopyIcon size={14} />
+                  <span>Copy</span>
+                </>
+              )}
             </span>
-            {copied ? <CheckIcon size={15} /> : <CopyIcon size={15} />}
           </button>
         ) : (
           <button
@@ -297,13 +307,21 @@ export default function ResultCard({
           >
             <span className="rc-code-label">{item.codeType}</span>
             <span className="rc-code-value">
-              {fetchingCode ? "Finding code..." : "Get code"}
+              {fetchingCode ? "Finding code..." : "Not available"}
             </span>
-            {fetchingCode ? (
-              <span className="search-btn-spinner mini" aria-hidden />
-            ) : (
-              <SparklesIcon size={14} />
-            )}
+            <span className="rc-get-cta">
+              {fetchingCode ? (
+                <>
+                  <span className="search-btn-spinner mini" aria-hidden />
+                  <span>Finding...</span>
+                </>
+              ) : (
+                <>
+                  <SparklesIcon size={14} />
+                  <span>Get code</span>
+                </>
+              )}
+            </span>
           </button>
         )}
 

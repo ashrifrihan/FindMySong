@@ -6,13 +6,6 @@ import Emoji from "./Emoji";
 import { QUOTA_EVENT } from "./SearchForm";
 import type { Result, SearchCorrection, SearchResponse } from "@/lib/types";
 
-const TABS = [
-  { id: "all", label: "All" },
-  { id: "song", label: "Songs" },
-  { id: "artist", label: "Artists" },
-  { id: "album", label: "Albums" },
-];
-
 export default function SearchResults({
   q,
   type,
@@ -46,12 +39,9 @@ export default function SearchResults({
     } catch {}
   }, []);
 
-  function handleLangChange(pref: string) {
-    setLangPref(pref);
-    try {
-      localStorage.setItem("fms_lang_pref", pref);
-    } catch {}
-  }
+  useEffect(() => {
+    if (initialLang) setLangPref(initialLang);
+  }, [initialLang]);
 
   useEffect(() => {
     setVisibleCount(10);
@@ -119,41 +109,6 @@ export default function SearchResults({
 
   return (
     <>
-      <div className="search-results-controls">
-        <nav className="chips" aria-label="Result type">
-          {TABS.map((t) => (
-            <Link
-              key={t.id}
-              replace
-              className="glass chip pressable"
-              href={`/search?q=${encodeURIComponent(q)}&type=${t.id}&lang=${langPref}${exact ? "&exact=true" : ""}`}
-              aria-current={type === t.id ? "page" : undefined}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="lang-pref-switcher" role="radiogroup" aria-label="Language priority">
-          <button
-            type="button"
-            className={`lang-pref-chip pressable${langPref === "tamil" ? " active" : ""}`}
-            onClick={() => handleLangChange("tamil")}
-            title="Prioritize Tamil originals, film tracks, and South Asian releases"
-          >
-            <span className="lang-badge">🌟</span> Tamil First
-          </button>
-          <button
-            type="button"
-            className={`lang-pref-chip pressable${langPref === "all" ? " active" : ""}`}
-            onClick={() => handleLangChange("all")}
-            title="Standard ranking across all languages"
-          >
-            <span className="lang-badge">🌐</span> All
-          </button>
-        </div>
-      </div>
-
       {/* ── Layer 5: "Showing results for..." / "Did you mean...?" banner ── */}
       {!state.loading && correction && !exact && (
         <div className="correction-banner" role="status">
@@ -197,9 +152,11 @@ export default function SearchResults({
             <>
               {displayedSongs.length > 0 && (
                 <>
-                  <h2 className="group-title">
-                    Songs {songs.length > 10 && `(${displayedSongs.length}/${songs.length})`}
-                  </h2>
+                  <div className="results-count-header">
+                    <span className="results-count-text">
+                      {songs.length} {songs.length === 1 ? "song" : "songs"}
+                    </span>
+                  </div>
                   <ul className="list">
                     {displayedSongs.map((r) => (
                       <ResultCard key={r.key} item={r} query={q} />
@@ -234,6 +191,11 @@ export default function SearchResults({
             </>
           ) : (
             <>
+              <div className="results-count-header">
+                <span className="results-count-text">
+                  {results.length} {results.length === 1 ? (type === "song" ? "song" : type === "artist" ? "artist" : "album") : (type === "song" ? "songs" : type === "artist" ? "artists" : "albums")}
+                </span>
+              </div>
               <ul className="list">
                 {(type === "song" ? displayedSongs : results).map((r) => (
                   <ResultCard key={r.key} item={r} query={q} />

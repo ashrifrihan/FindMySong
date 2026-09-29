@@ -190,6 +190,13 @@ export default function SearchForm({
     submitQuery(item.title);
   }
 
+  function onModeChange(modeId: string) {
+    setSearchMode(modeId);
+    if (!isHero && q.trim()) {
+      router.push(`/search?q=${encodeURIComponent(q.trim())}&type=${modeId}&lang=${langPref}`);
+    }
+  }
+
   const out = left === 0 && !isMember;
   const isHero = variant === "hero";
   const barClass = isHero ? "hero-search" : "search-bar";
@@ -202,43 +209,7 @@ export default function SearchForm({
 
   return (
     <div className={`search-form-wrap${isHero ? " hero-mode-wrap" : ""}`} ref={containerRef}>
-      {/* Search Mode & Language Ranking Priority */}
-      <div className="search-controls-bar">
-        <div className="search-mode-selector" role="tablist" aria-label="Search option">
-          {SEARCH_MODES.map((mode) => (
-            <button
-              key={mode.id}
-              type="button"
-              role="tab"
-              aria-selected={searchMode === mode.id}
-              className={`search-mode-pill pressable${searchMode === mode.id ? " active" : ""}`}
-              onClick={() => setSearchMode(mode.id)}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="lang-pref-selector" role="radiogroup" aria-label="Language ranking priority">
-          <button
-            type="button"
-            className={`lang-pref-pill pressable${langPref === "tamil" ? " active" : ""}`}
-            onClick={() => handleLangPrefChange("tamil")}
-            title="Tamil songs, film tracks, and South Asian releases ranked first"
-          >
-            <span className="lang-icon">🌟</span> Tamil First
-          </button>
-          <button
-            type="button"
-            className={`lang-pref-pill pressable${langPref === "all" ? " active" : ""}`}
-            onClick={() => handleLangPrefChange("all")}
-            title="All languages ranked normally"
-          >
-            <span className="lang-icon">🌐</span> All
-          </button>
-        </div>
-      </div>
-
+      {/* ── 1. Search Box FIRST right below top bar ── */}
       <form className={barClass} onSubmit={submit} role="search">
         <SearchIcon size={20} />
         <label htmlFor="q" className="sr-only">
@@ -274,6 +245,36 @@ export default function SearchForm({
           )}
         </button>
       </form>
+
+      {/* ── 2. ONE Single Compact Filter Row: All · Songs · Artists · Albums + Tamil First ── */}
+      <div className="search-controls-bar">
+        <div className="search-mode-selector" role="tablist" aria-label="Search filter">
+          {SEARCH_MODES.map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              role="tab"
+              aria-selected={searchMode === mode.id}
+              className={`search-mode-pill pressable${searchMode === mode.id ? " active" : ""}`}
+              onClick={() => onModeChange(mode.id)}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="lang-pref-selector" role="radiogroup" aria-label="Language priority">
+          <button
+            type="button"
+            className={`lang-pref-pill pressable${langPref === "tamil" ? " active" : ""}`}
+            onClick={() => handleLangPrefChange(langPref === "tamil" ? "all" : "tamil")}
+            title={langPref === "tamil" ? "Tamil first ranking enabled" : "Standard ranking across all languages"}
+          >
+            <span className="lang-icon">🌟</span>
+            <span>Tamil first</span>
+          </button>
+        </div>
+      </div>
 
       {/* Layer 7: Typing Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (

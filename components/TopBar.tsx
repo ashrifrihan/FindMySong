@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { usePathname } from "next/navigation";
-import { GlassIcon, MoonIcon, SunIcon } from "./Icons";
+import Link from "next/link";
+import { SettingsIcon, SunIcon, MoonIcon } from "./Icons";
 import { applyTheme, applyTint, readTheme, readTint, resolvedTheme, type Theme } from "@/lib/appearance";
 
 const TITLES: Record<string, string> = {
@@ -14,7 +15,7 @@ const TITLES: Record<string, string> = {
 export default function TopBar() {
   const path = usePathname();
   const [scrolled, setScrolled] = useState(false);
-  const [glassOpen, setGlassOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [tint, setTint] = useState(0.35);
   const [theme, setTheme] = useState<Theme>("system");
   const [isDark, setIsDark] = useState(false);
@@ -40,31 +41,29 @@ export default function TopBar() {
 
   // Scroll detection for frosted topbar
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => setScrolled(window.scrollY > 15);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close glass popover on outside click / Escape
+  // Close popover on outside click / Escape
   useEffect(() => {
-    if (!glassOpen) return;
+    if (!settingsOpen) return;
     const close = (e: PointerEvent) => {
       if (!pop.current?.contains(e.target as Node) && !btn.current?.contains(e.target as Node))
-        setGlassOpen(false);
+        setSettingsOpen(false);
     };
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setGlassOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setSettingsOpen(false);
     document.addEventListener("pointerdown", close);
     document.addEventListener("keydown", esc);
     return () => {
       document.removeEventListener("pointerdown", close);
       document.removeEventListener("keydown", esc);
     };
-  }, [glassOpen]);
+  }, [settingsOpen]);
 
-  function toggleTheme() {
-    const next: Theme = isDark ? "light" : "dark";
-
+  function changeTheme(next: Theme) {
     if (!document.startViewTransition) {
       applyTheme(next);
       setTheme(next);
@@ -86,60 +85,89 @@ export default function TopBar() {
   return (
     <header className={`topbar${scrolled ? " scrolled" : ""}`}>
       <div className="topbar-in">
-        <span className="inline-title" aria-hidden={!scrolled}>{title}</span>
+        {/* Left: Small, elegant page title */}
+        <Link href="/" className="topbar-brand" aria-label="Go to home">
+          <span className="brand-dot" aria-hidden />
+          <span className="brand-text">{title}</span>
+        </Link>
 
         <div className="topbar-actions">
-          {/* Dark / Light mode toggle */}
-          <button
-            suppressHydrationWarning
-            className="glass-btn pressable theme-toggle-btn"
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            onClick={toggleTheme}
-          >
-            <div className={`theme-icon-container ${isDark ? "is-dark" : "is-light"}`}>
-              <span className="icon-sun"><SunIcon size={18} /></span>
-              <span className="icon-moon"><MoonIcon size={18} /></span>
-            </div>
-          </button>
-
-          {/* Glass tint popover trigger */}
+          {/* Single clean Settings button on the right */}
           <button
             ref={btn}
             suppressHydrationWarning
-            className="glass-btn pressable"
-            aria-label="Glass appearance"
-            aria-expanded={glassOpen}
-            onClick={() => setGlassOpen((o) => !o)}
+            className={`glass-btn pressable${settingsOpen ? " active" : ""}`}
+            aria-label="Settings and appearance"
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen((o) => !o)}
           >
-            <GlassIcon size={18} />
+            <SettingsIcon size={18} />
           </button>
         </div>
       </div>
 
-      {/* Glass tint popover */}
+      {/* Settings & Appearance popover */}
       <div
         ref={pop}
-        className={`popover${glassOpen ? " open" : ""}`}
+        className={`popover${settingsOpen ? " open" : ""}`}
         role="dialog"
-        aria-label="Glass appearance"
-        aria-hidden={!glassOpen}
+        aria-label="Appearance and settings"
+        aria-hidden={!settingsOpen}
       >
-        <p className="pop-title">Liquid Glass</p>
-        <input
-          type="range"
-          suppressHydrationWarning
-          min={0} max={1} step={0.01}
-          value={tint}
-          tabIndex={glassOpen ? 0 : -1}
-          aria-label="Glass tint, from clear to tinted"
-          style={{ ["--p" as any]: `${tint * 100}%` }}
-          onChange={(e) => {
-            const v = parseFloat(e.target.value);
-            setTint(v);
-            applyTint(v);
-          }}
-        />
-        <div className="pop-scale"><span>Clear</span><span>Tinted</span></div>
+        <p className="pop-title">Settings & Appearance</p>
+
+        {/* Theme mode selection */}
+        <div className="pop-section">
+          <label className="pop-section-label">Theme</label>
+          <div className="pop-segmented" role="radiogroup" aria-label="Theme mode">
+            <button
+              type="button"
+              className={`pop-seg-btn pressable${theme === "light" ? " active" : ""}`}
+              onClick={() => changeTheme("light")}
+            >
+              <SunIcon size={14} /> Light
+            </button>
+            <button
+              type="button"
+              className={`pop-seg-btn pressable${theme === "dark" ? " active" : ""}`}
+              onClick={() => changeTheme("dark")}
+            >
+              <MoonIcon size={14} /> Dark
+            </button>
+            <button
+              type="button"
+              className={`pop-seg-btn pressable${theme === "system" ? " active" : ""}`}
+              onClick={() => changeTheme("system")}
+            >
+              Auto
+            </button>
+          </div>
+        </div>
+
+        {/* Liquid Glass slider */}
+        <div className="pop-section">
+          <label className="pop-section-label">Liquid Glass</label>
+          <input
+            type="range"
+            suppressHydrationWarning
+            min={0}
+            max={1}
+            step={0.01}
+            value={tint}
+            tabIndex={settingsOpen ? 0 : -1}
+            aria-label="Glass tint, from clear to tinted"
+            style={{ ["--p" as any]: `${tint * 100}%` }}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              setTint(v);
+              applyTint(v);
+            }}
+          />
+          <div className="pop-scale">
+            <span>Clear</span>
+            <span>Tinted</span>
+          </div>
+        </div>
       </div>
     </header>
   );

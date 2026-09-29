@@ -11,13 +11,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function SearchPage({ searchParams }: Props) {
   const { q = "", type: rawType = "all", exact = "false", lang = "tamil" } = await searchParams;
-  const type = ["all", "song", "album"].includes(rawType) ? rawType : "all";
+  const type = ["all", "song", "album", "artist"].includes(rawType) ? rawType : "all";
   const query = q.trim();
 
   return (
-    <div>
-      <div className="search-header">
-        <h1>Search</h1>
+    <div className="search-page-container">
+      <div className="search-page-top">
         <SearchForm initialQ={query} type={type} initialLang={lang} autoFocus={!query} variant="default" />
       </div>
       {query && <SearchResults q={query} type={type} exact={exact === "true"} initialLang={lang} />}

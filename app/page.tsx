@@ -3,35 +3,44 @@ import Emoji from "@/components/Emoji";
 
 export default function Home() {
   return (
-    <div>
-      {/* ── Sky gradient hero card (Nuvio AI / Drake music card style) ── */}
-      <div className="hero-card">
-        <div className="hero-eyebrow">
-          <Emoji char="🎵" size={20} />
-          FindMySong
-        </div>
-        <h1>The code behind every track.</h1>
-        <p className="hero-sub">
-          Find any song or album, copy its ISRC or UPC code, and paste it into Instagram Music search.
-        </p>
-        <SearchForm variant="hero" />
+    <div className="landing-wrap">
+      {/* Background glow specific to home page */}
+      <div className="landing-glow" aria-hidden />
 
-        {/* How it works chips */}
-        <div className="how-chips" aria-label="How it works">
-          <span className="how-chip">
-            <span className="how-chip-num">1</span>
-            Search
-          </span>
-          <span className="how-chip">
-            <span className="how-chip-num">2</span>
-            Copy the code
-          </span>
-          <span className="how-chip">
-            <span className="how-chip-num">3</span>
-            Paste in Instagram
-          </span>
+      <main className="landing-hero">
+        <div className="landing-eyebrow">
+          <Emoji char="🎵" size={24} className="landing-emoji" />
+          <span className="landing-pill-text">FindMySong</span>
         </div>
-      </div>
+        
+        <h1 className="landing-title">
+          The code behind<br/>
+          <span className="text-gradient">every track.</span>
+        </h1>
+        
+        <p className="landing-sub">
+          Find any song or album, copy its ISRC or UPC code, and paste it directly into Instagram Music search.
+        </p>
+
+        <div className="landing-search-container">
+          <SearchForm variant="hero" />
+        </div>
+
+        <div className="landing-features" aria-label="How it works">
+          <div className="feature-chip">
+            <div className="f-num">1</div>
+            <span>Search track</span>
+          </div>
+          <div className="feature-chip">
+            <div className="f-num">2</div>
+            <span>Copy ISRC</span>
+          </div>
+          <div className="feature-chip">
+            <div className="f-num">3</div>
+            <span>Paste in IG</span>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

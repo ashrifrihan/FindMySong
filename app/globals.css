@@ -7,6 +7,8 @@
    - Dark Music Player (glass controls over imagery)
    ====================================================== */
 
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap');
+
 /* ── Google Font ── loaded in layout via next/font, exposed as --font-inter */
 
 /* ── Easing tokens (Emil Kowalski) ── */
@@ -361,14 +363,14 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   transition: box-shadow 200ms ease, transform 180ms var(--ease-out);
 }
 .hero-search:focus-within {
-  box-shadow: 0 8px 32px rgba(59,130,246,.25), 0 0 0 3px rgba(59,130,246,.2), inset 0 1px 0 rgba(255,255,255,.9);
-  transform: scale(1.01);
+  box-shadow: 0 8px 32px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,1);
+  border-color: rgba(255,255,255,1);
 }
 .hero-search svg { color: rgba(0,0,0,.35); flex: none; width: 18px; height: 18px; }
 .hero-search input {
   flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
   color: #111; 
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1rem; /* 16px */
   font-weight: 400; letter-spacing: -0.01em; line-height: 1.2;
   padding: 10px 0;
@@ -472,15 +474,14 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   transition: box-shadow 200ms ease, border-color 200ms ease, transform 180ms var(--ease-out);
 }
 .search-bar:focus-within {
-  border-color: rgba(59,130,246,.4);
-  box-shadow: 0 0 0 3px rgba(59,130,246,.12), var(--shadow-md);
-  transform: scale(1.01);
+  border-color: var(--blue-2);
+  box-shadow: var(--shadow-md);
 }
 .search-bar svg { color: var(--text-3); flex: none; width: 18px; height: 18px; }
 .search-bar input {
   flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
   color: var(--text-1);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1rem; /* 16px */
   font-weight: 400; letter-spacing: -0.01em; line-height: 1.2;
   padding: 10px 0;

@@ -42,7 +42,8 @@ export default function ResultCard({ item }: { item: Result }) {
 
   async function onCopy() {
     if (!item.code) return;
-    if (await copyText(item.code)) {
+    const textToCopy = `${item.codeType}:${item.code}`;
+    if (await copyText(textToCopy)) {
       navigator.vibrate?.(8);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);

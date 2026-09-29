@@ -2,10 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import TopBar from "@/components/TopBar";
 import TabBar from "@/components/TabBar";
-import { tintBootScript } from "@/lib/appearance";
+import { tintBootScript, themeBootScript } from "@/lib/appearance";
 import "./globals.css";
 
-// Apple devices use SF Pro (system font). Android/Windows get Inter, which is designed to look like it.
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
@@ -19,8 +18,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#eef1f8" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f6fb" },
+    { media: "(prefers-color-scheme: dark)",  color: "#0a0a0f" },
   ],
 };
 
@@ -28,7 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: tintBootScript }} />
+        {/* Run before paint: restore tint + theme from localStorage to avoid flash */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript + tintBootScript }} />
       </head>
       <body>
         <div className="wallpaper" aria-hidden><i /><i /><i /><i /></div>

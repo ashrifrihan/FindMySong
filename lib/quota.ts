@@ -70,11 +70,24 @@ export function ipFrom(headers: Headers) {
 /**
  * Extracts quota key, membership state, and applicable daily limit
  */
-export function getQuotaContext(headers: Headers, phoneCookie?: string | null) {
-  const phone = (phoneCookie || "").replace(/[^\d+]/g, "").trim();
-  const isMember = phone.length >= 8;
+export function getQuotaContext(
+  headers: Headers,
+  verifiedUserId?: string | null,
+  phoneCookie?: string | null
+) {
+  if (verifiedUserId) {
+    return {
+      key: `user:${verifiedUserId}`,
+      isMember: true,
+      phone: null,
+      limit: MEMBER_LIMIT,
+    };
+  }
 
-  if (isMember) {
+  const phone = (phoneCookie || "").replace(/[^\d+]/g, "").trim();
+  const isLegacyMember = phone.length >= 8;
+
+  if (isLegacyMember) {
     return {
       key: `phone:${phone}`,
       isMember: true,

@@ -13,8 +13,10 @@ import {
   getTrackCopyCounts,
 } from "@/lib/db-music";
 import { searchSpotifyTracks, searchSpotifyAlbums } from "@/lib/spotify";
+import { getVerifiedUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 // Deezer public API fallback
 const API = "https://api.deezer.com";
@@ -28,6 +30,11 @@ async function dz(path: string, timeoutMs = 3500) {
     const res = await fetch(API + path, {
       cache: "no-store",
       signal: controller.signal,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        Accept: "application/json",
+      },
     });
     clearTimeout(timer);
     if (!res.ok) throw new Error(`Music service returned ${res.status}`);
@@ -155,8 +162,9 @@ export async function GET(req: NextRequest) {
   const soundKey = generateSoundKey(parsed.cleaned);
   parsed.soundKey = soundKey;
 
+  const verifiedUser = await getVerifiedUser(req);
   const phoneCookie = req.cookies.get("findmysong_phone")?.value;
-  const quotaCtx = getQuotaContext(req.headers, phoneCookie);
+  const quotaCtx = getQuotaContext(req.headers, verifiedUser?.id, phoneCookie);
   const cacheKey = `${type}:${parsed.cleaned}`;
 
   // ── Step 2: Run all database checks concurrently ──
@@ -184,7 +192,7 @@ export async function GET(req: NextRequest) {
   if (currentLeft <= 0 && !quotaCtx.isMember) {
     return NextResponse.json(
       {
-        error: "You've used all 10 free searches for today. Create an account with your mobile number to unlock unlimited searches!",
+        error: "You've used all 10 free searches for today. Sign in with Google to unlock unlimited searches!",
         remaining: 0,
         limit: quotaCtx.limit,
         isMember: false,

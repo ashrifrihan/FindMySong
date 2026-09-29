@@ -8,7 +8,7 @@ export default function Home() {
       {/* Background glow specific to home page */}
       <div className="landing-glow" aria-hidden />
 
-      <main className="landing-hero">
+      <section className="landing-hero">
         <div className="landing-eyebrow">
           <Emoji char="🎵" size={20} className="landing-emoji" />
           <span className="landing-pill-text">FindMySong</span>
@@ -20,7 +20,7 @@ export default function Home() {
         </h1>
 
         <p className="landing-sub">
-          Crafted for Sri Lankan creators, Tamil &amp; island music lovers. Find any Tamil cinema banger, independent drop, Baila anthem, or trending reel audio. Copy the exact studio ISRC code and paste directly into Instagram Music.
+          Find any Tamil cinema banger, Baila anthem, or trending track&apos;s official studio code and paste directly into Instagram Music.
         </p>
 
         <div className="landing-search-container">
@@ -42,7 +42,7 @@ export default function Home() {
             <span>Paste in Instagram &amp; flex</span>
           </div>
         </div>
-      </main>
+      </section>
 
       {/* ── Purpose Showcase Section (Ultra-clean Bento Grid) ── */}
       <section className="purpose-section" aria-labelledby="purpose-heading">
@@ -70,7 +70,7 @@ export default function Home() {
             </div>
             <h3>The Secret to Unlocking Any IG Track</h3>
             <p>
-              Every official studio recording has a unique 12-character <strong>ISRC</strong>. Pasting it into Instagram Stories or Reels bypasses fuzzy search algorithms and loads the 100% genuine master track immediately with zero karaoke or fake covers.
+              Every official studio recording has a unique 12-character <strong>ISRC</strong>. Pasting it into Instagram Stories or Reels usually finds the exact official studio version directly, bypassing fuzzy search confusion and karaoke knockoffs.
             </p>
             <div className="p-demo-pill">
               <span className="p-demo-code">ISRC: LK-A01-24-00192</span>

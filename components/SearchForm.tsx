@@ -49,7 +49,12 @@ export default function SearchForm({
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => setQ(initialQ), [initialQ]);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    setQ(initialQ);
+    setIsNavigating(false);
+  }, [initialQ]);
   useEffect(() => setSearchMode(type || "all"), [type]);
 
   useEffect(() => {
@@ -126,6 +131,7 @@ export default function SearchForm({
       return;
     }
 
+    setIsNavigating(true);
     setShowSuggestions(false);
     (document.activeElement as HTMLElement | null)?.blur();
     router.push(`/search?q=${encodeURIComponent(v)}&type=${searchMode}`);
@@ -212,13 +218,17 @@ export default function SearchForm({
           autoFocus={autoFocus}
         />
         <button
-          className={`${goClass} pressable`}
+          className={`${goClass} pressable${isNavigating ? " is-searching" : ""}`}
           type="submit"
           suppressHydrationWarning
-          disabled={!q.trim()}
-          aria-label="Search"
+          disabled={!q.trim() || isNavigating}
+          aria-label={isNavigating ? "Searching..." : "Search"}
         >
-          <ArrowUpIcon size={20} />
+          {isNavigating ? (
+            <span className="search-btn-spinner" aria-hidden />
+          ) : (
+            <ArrowUpIcon size={20} />
+          )}
         </button>
       </form>
 

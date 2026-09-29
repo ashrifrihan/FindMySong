@@ -148,8 +148,8 @@ export default function ResultCard({
     <li className={`result-card${item.isBestMatch ? " best-match-card" : ""}`}>
       {/* ── Header: sky-gradient with blurred album art backdrop ── */}
       <div className="rc-header">
-        {/* Blurred cover behind everything */}
-        {item.cover && (
+        {/* Blurred cover backdrop reserved only for the best-match card for smooth 60fps scrolling */}
+        {item.isBestMatch && item.cover && (
           <div
             className="rc-header-bg"
             style={{ backgroundImage: `url(${item.cover})` }}

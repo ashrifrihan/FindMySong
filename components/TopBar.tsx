@@ -92,11 +92,14 @@ export default function TopBar() {
           {/* Dark / Light mode toggle */}
           <button
             suppressHydrationWarning
-            className="glass-btn pressable"
+            className="glass-btn pressable theme-toggle-btn"
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
             onClick={toggleTheme}
           >
-            {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+            <div className={`theme-icon-container ${isDark ? "is-dark" : "is-light"}`}>
+              <span className="icon-sun"><SunIcon size={18} /></span>
+              <span className="icon-moon"><MoonIcon size={18} /></span>
+            </div>
           </button>
 
           {/* Glass tint popover trigger */}

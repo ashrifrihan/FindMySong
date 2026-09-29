@@ -10,8 +10,8 @@ export default function Home() {
 
       <main className="landing-hero">
         <div className="landing-eyebrow">
-          <Emoji char="🇱🇰" size={20} className="landing-emoji" />
-          <span className="landing-pill-text">Built for Our Nation · Sri Lanka&apos;s Music Finder</span>
+          <Emoji char="🎵" size={20} className="landing-emoji" />
+          <span className="landing-pill-text">FindMySong</span>
         </div>
 
         <h1 className="landing-title">
@@ -20,7 +20,7 @@ export default function Home() {
         </h1>
 
         <p className="landing-sub">
-          Crafted for Sri Lankan creators, Tamil &amp; island music lovers <Emoji char="🇱🇰" size={16} />. Find any Tamil cinema banger, independent drop, Baila anthem, or trending reel audio. Copy the exact studio ISRC code and paste directly into Instagram Music.
+          Crafted for Sri Lankan creators, Tamil &amp; island music lovers. Find any Tamil cinema banger, independent drop, Baila anthem, or trending reel audio. Copy the exact studio ISRC code and paste directly into Instagram Music.
         </p>
 
         <div className="landing-search-container">
@@ -70,7 +70,7 @@ export default function Home() {
             </div>
             <h3>The Secret to Unlocking Any IG Track</h3>
             <p>
-              Every official studio recording has a unique 12-character <strong>ISRC</strong>. Pasting it into Instagram Stories or Reels bypasses fuzzy search algorithms and loads the 100% genuine master track immediately — no karaoke or fake covers.
+              Every official studio recording has a unique 12-character <strong>ISRC</strong>. Pasting it into Instagram Stories or Reels bypasses fuzzy search algorithms and loads the 100% genuine master track immediately with zero karaoke or fake covers.
             </p>
             <div className="p-demo-pill">
               <span className="p-demo-code">ISRC: LK-A01-24-00192</span>

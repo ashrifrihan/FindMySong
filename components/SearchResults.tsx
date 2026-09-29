@@ -145,7 +145,7 @@ export default function SearchResults({
 
       {!state.loading && !state.error && results.length === 0 && (
         <div className="empty">
-          <Emoji char="🔍" size={72} className="big" />
+          <Emoji char="🔎" size={72} className="big" />
           <h2>No results for “{q}”</h2>
           <p>Check the spelling, or try the artist name with the song title.</p>
         </div>

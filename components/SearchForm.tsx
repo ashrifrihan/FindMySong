@@ -235,7 +235,13 @@ export default function SearchForm({
             >
               <div className="suggestion-art">
                 {item.cover ? (
-                  <img src={item.cover} alt="" />
+                  <img
+                    src={item.cover}
+                    alt=""
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
+                    style={{ userSelect: "none", pointerEvents: "none" }}
+                  />
                 ) : (
                   <NoteIcon size={16} />
                 )}

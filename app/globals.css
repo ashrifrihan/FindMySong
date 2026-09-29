@@ -188,7 +188,22 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
-img { display: block; max-width: 100%; }
+img {
+  display: block;
+  max-width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+.emoji-img {
+  display: inline-block !important;
+  vertical-align: -0.16em;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
 :focus-visible { outline: 2.5px solid var(--blue); outline-offset: 3px; border-radius: var(--r-sm); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -349,6 +364,9 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
 
 .landing-hero {
   display: flex; flex-direction: column; align-items: center; text-align: center;
+  width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
   animation: fade-up 700ms var(--ease-out) both;
 }
 
@@ -360,13 +378,32 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   box-shadow: var(--shadow-sm);
   animation: fade-up 600ms var(--ease-out) both;
 }
-.landing-emoji { background: #fff; border-radius: 50%; padding: 4px; box-shadow: var(--shadow-xs); }
+.landing-emoji {
+  background: #fff;
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: var(--shadow-xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .landing-pill-text { font-size: .875rem; font-weight: 700; letter-spacing: .01em; color: var(--text-1); }
+.eyebrow-nexzoa {
+  color: var(--blue);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 150ms ease;
+}
+.eyebrow-nexzoa:hover {
+  opacity: 0.8;
+}
 
 .landing-title {
-  font-size: clamp(2.5rem, 9vw, 3.5rem);
-  font-weight: 700; line-height: 1.05; letter-spacing: -0.04em;
-  color: var(--text-1); margin-bottom: 16px;
+  font-size: clamp(2.75rem, 6.5vw, 4.25rem);
+  font-weight: 800; line-height: 1.08; letter-spacing: -0.04em;
+  color: var(--text-1); margin-bottom: 18px;
+  max-width: 900px;
   animation: fade-up 700ms var(--ease-out) both; animation-delay: 80ms;
 }
 .text-gradient {
@@ -375,8 +412,8 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
 }
 
 .landing-sub {
-  font-size: 1.125rem; color: var(--text-2); font-weight: 500;
-  max-width: 58ch; margin: 0 auto 32px; line-height: 1.5;
+  font-size: 1.1875rem; color: var(--text-2); font-weight: 500;
+  max-width: 76ch; margin: 0 auto 36px; line-height: 1.55;
   animation: fade-up 700ms var(--ease-out) both; animation-delay: 160ms;
 }
 
@@ -417,7 +454,7 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
 .hero-go svg { width: 18px; height: 18px; stroke-width: 2.3; color: var(--surface); }
 
 .landing-search-container {
-  width: 100%; max-width: 680px; margin: 0 auto;
+  width: 100%; max-width: 780px; margin: 0 auto;
   animation: fade-up 700ms var(--ease-out) both; animation-delay: 240ms;
 }
 
@@ -1554,6 +1591,35 @@ input[type="range"]::-moz-range-thumb { width: 24px; height: 18px; border: 0; bo
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.modal-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.modal-input-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.name-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--border-2);
+  background: var(--surface);
+  color: var(--text-1);
+  font-size: 0.9375rem;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.name-input:focus {
+  border-color: var(--blue);
 }
 
 .phone-input-row {

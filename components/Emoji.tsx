@@ -31,7 +31,8 @@ export const APPLE_EMOJI: Record<string, string> = {
   "🎻": "1f3bb",
   "🎼": "1f3bc",
   "📻": "1f4fb",
-  "🔍": "1f50d",
+  "🔍": "1f50e", // Correct search direction (handle pointing bottom-right)
+  "🔎": "1f50e",
 
   // Fun / animals (used in old hero, kept for compatibility)
   "🐶": "1f436",
@@ -88,7 +89,15 @@ export default function Emoji({ char, size, className = "", style }: EmojiProps)
     return (
       <span
         className={`emoji-char ${className}`}
-        style={{ fontSize: size * 0.88, lineHeight: 1, ...style }}
+        style={{
+          fontSize: size * 0.88,
+          lineHeight: 1,
+          display: "inline-block",
+          verticalAlign: "-0.16em",
+          userSelect: "none",
+          WebkitUserSelect: "none",
+          ...style,
+        }}
         aria-hidden
       >
         {char}
@@ -98,16 +107,24 @@ export default function Emoji({ char, size, className = "", style }: EmojiProps)
 
   return (
     <img
-      className={className}
+      className={`emoji-img ${className}`}
       src={url}
       width={size}
       height={size}
       alt=""
       aria-hidden
       draggable={false}
+      onContextMenu={(e) => e.preventDefault()}
       decoding="async"
       onError={() => setFailed(true)}
-      style={style}
+      style={{
+        display: "inline-block",
+        verticalAlign: "-0.16em",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        pointerEvents: "none",
+        ...style,
+      }}
     />
   );
 }

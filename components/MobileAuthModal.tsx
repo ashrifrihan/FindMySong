@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { BoltIcon, CheckIcon } from "./Icons";
 import { QUOTA_EVENT } from "./SearchForm";
 
@@ -12,31 +13,62 @@ export default function MobileAuthModal({
   onClose: () => void;
   onSuccess?: (phone: string) => void;
 }) {
+  const [name, setName] = useState("");
   const [countryCode, setCountryCode] = useState("+94");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const fullNumber = `${countryCode}${phone.replace(/\D/g, "")}`;
-    if (phone.replace(/\D/g, "").length < 8) {
-      setError("Please enter a valid phone number (at least 8 digits)");
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) {
+      setError("Please enter your name (at least 2 characters)");
       setLoading(false);
       return;
     }
+
+    const cleanDigits = phone.replace(/\D/g, "");
+    if (countryCode === "+94") {
+      const normalizedDigits = cleanDigits.startsWith("0") ? cleanDigits.slice(1) : cleanDigits;
+      // Valid Sri Lankan mobile prefixes: 70, 71, 72, 74, 75, 76, 77, 78 + 7 digits = 9 digits
+      if (!/^(7[01245678]\d{7})$/.test(normalizedDigits)) {
+        setError("Please enter a valid Sri Lankan mobile number (e.g. 77 123 4567)");
+        setLoading(false);
+        return;
+      }
+      if (/^(\d)\1{8}$/.test(normalizedDigits) || normalizedDigits === "123456789") {
+        setError("Please enter an active mobile number");
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (cleanDigits.length < 8 || cleanDigits.length > 15) {
+        setError("Please enter a valid mobile number with at least 8 digits");
+        setLoading(false);
+        return;
+      }
+    }
+
+    const formattedDigits = cleanDigits.startsWith("0") && countryCode === "+94" ? cleanDigits.slice(1) : cleanDigits;
+    const fullNumber = `${countryCode}${formattedDigits}`;
 
     try {
       const res = await fetch("/api/auth/phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: fullNumber }),
+        body: JSON.stringify({ name: trimmedName, phone: fullNumber }),
       });
 
       const data = await res.json();
@@ -58,7 +90,7 @@ export default function MobileAuthModal({
     }
   }
 
-  return (
+  return createPortal(
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div className="modal-card">
         <button
@@ -78,7 +110,7 @@ export default function MobileAuthModal({
             Unlock Unlimited Searches
           </h2>
           <p className="modal-sub">
-            Anonymous guests get 10 free searches per day. Enter your mobile number to unlock{" "}
+            Guests get 10 free searches per day. Enter your name and mobile number to unlock{" "}
             <strong>Unlimited Daily Searches</strong> immediately!
           </p>
         </div>
@@ -89,46 +121,68 @@ export default function MobileAuthModal({
               <CheckIcon size={22} />
             </span>
             <h3>Unlimited Searches Unlocked!</h3>
-            <p>Welcome! Your mobile number is verified.</p>
+            <p>Welcome, {name}! Your mobile number is registered.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="modal-form">
             {error && <div className="modal-error" role="alert">{error}</div>}
 
-            <div className="phone-input-row">
-              <select
-                className="country-select"
-                value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)}
-                aria-label="Country Code"
-              >
-                <option value="+94">🇱🇰 +94 (LK)</option>
-                <option value="+91">🇮🇳 +91 (IN)</option>
-                <option value="+1">🇺🇸 +1 (US)</option>
-                <option value="+44">🇬🇧 +44 (UK)</option>
-                <option value="+971">🇦🇪 +971 (UAE)</option>
-                <option value="+65">🇸🇬 +65 (SG)</option>
-                <option value="+60">🇲🇾 +60 (MY)</option>
-                <option value="+61">🇦🇺 +61 (AU)</option>
-                <option value="+1">🇨🇦 +1 (CA)</option>
-              </select>
-
+            <div className="modal-input-group">
+              <label htmlFor="auth-name" className="modal-input-label">
+                Your Name
+              </label>
               <input
-                type="tel"
-                className="phone-number-input"
-                placeholder={countryCode === "+94" ? "77 123 4567" : "Mobile number"}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                autoComplete="tel"
+                id="auth-name"
+                type="text"
+                className="name-input"
+                placeholder="Enter your name (e.g. Rihan)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
                 required
                 autoFocus
               />
             </div>
 
+            <div className="modal-input-group">
+              <label htmlFor="auth-phone" className="modal-input-label">
+                Mobile Number
+              </label>
+              <div className="phone-input-row">
+                <select
+                  className="country-select"
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  aria-label="Country Code"
+                >
+                  <option value="+94">🇱🇰 +94 (LK)</option>
+                  <option value="+91">🇮🇳 +91 (IN)</option>
+                  <option value="+1">🇺🇸 +1 (US)</option>
+                  <option value="+44">🇬🇧 +44 (UK)</option>
+                  <option value="+971">🇦🇪 +971 (UAE)</option>
+                  <option value="+65">🇸🇬 +65 (SG)</option>
+                  <option value="+60">🇲🇾 +60 (MY)</option>
+                  <option value="+61">🇦🇺 +61 (AU)</option>
+                  <option value="+1">🇨🇦 +1 (CA)</option>
+                </select>
+
+                <input
+                  id="auth-phone"
+                  type="tel"
+                  className="phone-number-input"
+                  placeholder={countryCode === "+94" ? "77 123 4567" : "Mobile number"}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  autoComplete="tel"
+                  required
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
               className="modal-submit-btn pressable"
-              disabled={loading || phone.trim().length < 8}
+              disabled={loading || phone.trim().length < 8 || name.trim().length < 2}
             >
               {loading ? "Verifying…" : "Get Unlimited Searches"}
             </button>
@@ -139,6 +193,7 @@ export default function MobileAuthModal({
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -170,7 +170,14 @@ export default function ResultCard({
           }
         >
           {item.cover ? (
-            <img src={item.cover} alt="" loading="lazy" />
+            <img
+              src={item.cover}
+              alt=""
+              loading="lazy"
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+              style={{ userSelect: "none", pointerEvents: "none" }}
+            />
           ) : (
             <div className="rc-art-placeholder">
               <NoteIcon size={28} />

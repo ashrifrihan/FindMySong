@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUpIcon, SearchIcon } from "./Icons";
+import { ArrowUpIcon, BoltIcon, SearchIcon } from "./Icons";
 
 export const QUOTA_EVENT = "findmysong:quota";
 
@@ -78,21 +78,29 @@ export default function SearchForm({
         </button>
       </form>
 
-      {/* Quota indicator */}
-      <p className={quotaClass} aria-live="polite">
-        {left !== null && (
-          <span className="dots" aria-hidden>
-            {Array.from({ length: limit }, (_, i) => (
-              <i key={i} className={i < left ? "on" : ""} />
-            ))}
-          </span>
-        )}
-        {left === null
-          ? `${limit} searches a day`
-          : out
-          ? "No searches left today — resets at midnight UTC."
-          : `${left} of ${limit} searches left today`}
-      </p>
+      {/* Quota indicator - Apple iOS widget style (only show in hero) */}
+      {isHero && (
+        <div className={`${quotaClass}${out ? " empty" : ""}`} aria-live="polite">
+          <div className="quota-pill">
+            <span className="quota-icon">
+              <BoltIcon size={14} />
+            </span>
+            <div className="quota-track" aria-hidden>
+              <div
+                className="quota-fill"
+                style={{ width: left === null ? "100%" : `${(left / limit) * 100}%` }}
+              />
+            </div>
+            <span className="quota-text">
+              {left === null
+                ? `${limit} left`
+                : out
+                ? "0 left"
+                : `${left} left`}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

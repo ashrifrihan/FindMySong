@@ -1,4 +1,5 @@
 import SearchForm from "@/components/SearchForm";
+import Emoji from "@/components/Emoji";
 
 export default function Home() {
   return (
@@ -6,7 +7,7 @@ export default function Home() {
       {/* ── Sky gradient hero card (Nuvio AI / Drake music card style) ── */}
       <div className="hero-card">
         <div className="hero-eyebrow">
-          <span>🎵</span>
+          <Emoji char="🎵" size={20} />
           FindMySong
         </div>
         <h1>The code behind every track.</h1>

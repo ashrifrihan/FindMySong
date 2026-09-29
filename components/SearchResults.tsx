@@ -58,7 +58,7 @@ export default function SearchResults({ q, type }: { q: string; type: string }) 
 
       {state.loading && (
         <div className="list" aria-busy="true" aria-label="Loading results">
-          {[0, 1, 2].map((i) => <div key={i} className="skeleton" />)}
+          {[0, 1, 2].map((i) => <div key={i} className="skeleton-card" />)}
         </div>
       )}
 

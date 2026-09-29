@@ -17,10 +17,10 @@ interface SuggestionItem {
 }
 
 const SEARCH_MODES = [
-  { id: "all", label: "All", placeholder: "Songs, artists, Tamil hits, Baila, BGMs, movies…" },
-  { id: "song", label: "Song", placeholder: "Search by song (e.g. Rathima, Hukum, Naa Ready, Kaithi)…" },
-  { id: "artist", label: "Artist", placeholder: "Search by artist (e.g. Anirudh, AR Rahman, Yuvan, Harris)…" },
-  { id: "album", label: "Album / Movie", placeholder: "Search by movie or album (e.g. Leo, Jailer, Master, Vikram)…" },
+  { id: "all", label: "All", placeholder: "Search songs, artists or movies" },
+  { id: "song", label: "Song", placeholder: "Search songs, artists or movies" },
+  { id: "artist", label: "Artist", placeholder: "Search songs, artists or movies" },
+  { id: "album", label: "Album / Movie", placeholder: "Search songs, artists or movies" },
 ];
 
 export default function SearchForm({
@@ -246,9 +246,9 @@ export default function SearchForm({
         </button>
       </form>
 
-      {/* ── 2. ONE Single Compact Filter Row: All · Songs · Artists · Albums + Tamil First ── */}
+      {/* ── 2. Full-width Filter Row + Tamil first chip on next line ── */}
       <div className="search-controls-bar">
-        <div className="search-mode-selector" role="tablist" aria-label="Search filter">
+        <div className="search-mode-selector" role="tablist" aria-label="Filter type">
           {SEARCH_MODES.map((mode) => (
             <button
               key={mode.id}
@@ -263,14 +263,16 @@ export default function SearchForm({
           ))}
         </div>
 
-        <div className="lang-pref-selector" role="radiogroup" aria-label="Language priority">
+        {/* Line 2: Tamil first toggle chip */}
+        <div className={`search-lang-row${isHero ? " hero-align" : ""}`}>
           <button
             type="button"
-            className={`lang-pref-pill pressable${langPref === "tamil" ? " active" : ""}`}
+            className={`tamil-toggle-chip pressable${langPref === "tamil" ? " on" : " off"}`}
+            aria-pressed={langPref === "tamil"}
             onClick={() => handleLangPrefChange(langPref === "tamil" ? "all" : "tamil")}
-            title={langPref === "tamil" ? "Tamil first ranking enabled" : "Standard ranking across all languages"}
+            title="Prioritize Tamil originals, film tracks, and South Asian releases"
           >
-            <span className="lang-icon">🌟</span>
+            <span className="tamil-star" aria-hidden>{langPref === "tamil" ? "★" : "☆"}</span>
             <span>Tamil first</span>
           </button>
         </div>

@@ -12,6 +12,7 @@ import {
   ChevronDownIcon,
   SparklesIcon,
 } from "./Icons";
+import { splitTitle } from "@/lib/displayTitle";
 
 // Only one preview plays at a time.
 let currentAudio: HTMLAudioElement | null = null;
@@ -177,10 +178,12 @@ export default function ResultCard({
     a.play().catch(() => {});
   }
 
-  const subtitle =
-    item.kind === "song" && item.album
-      ? `${item.artist} · ${item.album}`
-      : item.artist;
+  const { name: cleanTitle, movie } = splitTitle(item.title);
+  const subtitle = movie
+    ? `${item.artist} · ${movie}`
+    : item.kind === "song" && item.album
+    ? `${item.artist} · ${item.album}`
+    : item.artist;
 
   const otherVersions = item.versions || [];
   const hasVersions = otherVersions.length > 0;
@@ -242,9 +245,9 @@ export default function ResultCard({
             </div>
           )}
           <p className="rc-title" title={item.title}>
-            {item.title}
+            {cleanTitle}
           </p>
-          <p className="rc-artist" title={subtitle}>
+          <p className="rc-artist" title={item.title}>
             {subtitle}
           </p>
           <div className="rc-meta">

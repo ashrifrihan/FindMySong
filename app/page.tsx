@@ -20,26 +20,26 @@ export default function Home() {
         </h1>
 
         <p className="landing-sub">
-          Find any Tamil cinema banger, Baila anthem, or trending track&apos;s official studio code and paste directly into Instagram Music.
+          Find official studio codes for Tamil, Baila and trending tracks to use on Instagram Music.
         </p>
 
         <div className="landing-search-container">
           <SearchForm variant="hero" />
         </div>
 
-        {/* 3 Step Quick Overview */}
-        <div className="landing-features" aria-label="How it works">
-          <div className="feature-chip">
-            <div className="f-num">1</div>
-            <span>Search any track or vibe</span>
+        {/* 3 Step Quick Overview - clean vertical list full width */}
+        <div className="landing-steps-list" aria-label="How it works">
+          <div className="landing-step-row">
+            <span className="step-num">1</span>
+            <span className="step-text">Search any track, movie or vibe</span>
           </div>
-          <div className="feature-chip">
-            <div className="f-num">2</div>
-            <span>Copy official ISRC</span>
+          <div className="landing-step-row">
+            <span className="step-num">2</span>
+            <span className="step-text">Copy official ISRC studio code</span>
           </div>
-          <div className="feature-chip">
-            <div className="f-num">3</div>
-            <span>Paste in Instagram &amp; flex</span>
+          <div className="landing-step-row">
+            <span className="step-num">3</span>
+            <span className="step-text">Paste in Instagram Music sticker &amp; flex</span>
           </div>
         </div>
       </section>

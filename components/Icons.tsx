@@ -79,18 +79,3 @@ export const SettingsIcon = ({ size, className, style }: P) => (
     <line x1="17" y1="16" x2="23" y2="16" />
   </svg>
 );
-
-export const XIcon = ({ size, className, style }: P) => (
-  <svg {...base(size, className, style)} strokeWidth={2}>
-    <path d="M18 6 6 18M6 6l12 12" />
-  </svg>
-);
-
-export const MonitorIcon = ({ size, className, style }: P) => (
-  <svg {...base(size, className, style)} strokeWidth={1.8}>
-    <rect x="2" y="3" width="20" height="14" rx="2" />
-    <line x1="8" y1="21" x2="16" y2="21" />
-    <line x1="12" y1="17" x2="12" y2="21" />
-  </svg>
-);
-

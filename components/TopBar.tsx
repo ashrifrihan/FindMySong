@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { SettingsIcon, SunIcon, MoonIcon, MonitorIcon, XIcon, SparklesIcon } from "./Icons";
+import { SettingsIcon, SunIcon, MoonIcon } from "./Icons";
 import { applyTheme, applyTint, readTheme, readTint, resolvedTheme, type Theme } from "@/lib/appearance";
 
 const TITLES: Record<string, string> = {
@@ -80,147 +80,99 @@ export default function TopBar() {
     });
   }
 
-  function resetTint() {
-    setTint(0.35);
-    applyTint(0.35);
-  }
-
   const title = TITLES[path] ?? "FindMySong";
 
   return (
     <header className={`topbar${scrolled ? " scrolled" : ""}`}>
       <div className="topbar-in">
-        {/* Left: Brand title and dot - always shown on all pages like search page */}
-        <Link href="/" className="topbar-brand" aria-label="FindMySong Home">
-          <span className="brand-dot" aria-hidden />
-          <span className="brand-text">{title}</span>
-        </Link>
+        {/* Left: Page title (hidden on home page to avoid duplicate brand header) */}
+        {path !== "/" ? (
+          <Link href="/" className="topbar-brand" aria-label="Go to home">
+            <span className="brand-dot" aria-hidden />
+            <span className="brand-text">{title}</span>
+          </Link>
+        ) : (
+          <div className="topbar-brand-spacer" aria-hidden />
+        )}
 
         <div className="topbar-actions">
-          {/* Settings button on the right */}
+          {/* Single clean Settings button on the right */}
           <button
             ref={btn}
             suppressHydrationWarning
             className={`glass-btn pressable${settingsOpen ? " active" : ""}`}
-            aria-label="Appearance settings"
-            aria-haspopup="dialog"
+            aria-label="Settings and appearance"
             aria-expanded={settingsOpen}
             onClick={() => setSettingsOpen((o) => !o)}
           >
             <SettingsIcon size={18} />
           </button>
         </div>
+      </div>
 
-        {/* Settings & Appearance popover - anchored within topbar-in */}
-        <div
-          ref={pop}
-          className={`popover${settingsOpen ? " open" : ""}`}
-          role="dialog"
-          aria-label="Appearance and settings"
-          aria-hidden={!settingsOpen}
-        >
-          {/* Header */}
-          <div className="pop-header">
-            <div className="pop-header-title-wrap">
-              <span className="pop-header-icon-box">
-                <SparklesIcon size={14} />
-              </span>
-              <span className="pop-title">Appearance</span>
-            </div>
+      {/* Settings & Appearance popover */}
+      <div
+        ref={pop}
+        className={`popover${settingsOpen ? " open" : ""}`}
+        role="dialog"
+        aria-label="Appearance and settings"
+        aria-hidden={!settingsOpen}
+      >
+        <p className="pop-title">Settings & Appearance</p>
+
+        {/* Theme mode selection */}
+        <div className="pop-section">
+          <label className="pop-section-label">Theme</label>
+          <div className="pop-segmented" role="radiogroup" aria-label="Theme mode">
             <button
               type="button"
-              className="pop-close-btn pressable"
-              aria-label="Close appearance settings"
-              onClick={() => setSettingsOpen(false)}
+              className={`pop-seg-btn pressable${theme === "light" ? " active" : ""}`}
+              onClick={() => changeTheme("light")}
             >
-              <XIcon size={15} />
+              <SunIcon size={14} /> Light
             </button>
-          </div>
-
-          {/* Theme mode segmented controller */}
-          <div className="pop-section">
-            <div className="pop-section-head">
-              <span className="pop-section-label">Theme Mode</span>
-              <span className="pop-badge-status">{theme === "system" ? (isDark ? "Auto (Dark)" : "Auto (Light)") : theme}</span>
-            </div>
-            <div className="pop-segmented" role="radiogroup" aria-label="Theme mode">
-              <button
-                type="button"
-                role="radio"
-                aria-checked={theme === "light"}
-                className={`pop-seg-btn pressable${theme === "light" ? " active" : ""}`}
-                onClick={() => changeTheme("light")}
-              >
-                <SunIcon size={14} />
-                <span>Light</span>
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={theme === "dark"}
-                className={`pop-seg-btn pressable${theme === "dark" ? " active" : ""}`}
-                onClick={() => changeTheme("dark")}
-              >
-                <MoonIcon size={14} />
-                <span>Dark</span>
-              </button>
-              <button
-                type="button"
-                role="radio"
-                aria-checked={theme === "system"}
-                className={`pop-seg-btn pressable${theme === "system" ? " active" : ""}`}
-                onClick={() => changeTheme("system")}
-              >
-                <MonitorIcon size={14} />
-                <span>Auto</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Liquid Glass slider */}
-          <div className="pop-section">
-            <div className="pop-section-head">
-              <span className="pop-section-label">Liquid Glass</span>
-              <span className="pop-value-badge">{Math.round(tint * 100)}%</span>
-            </div>
-            <p className="pop-section-desc">Frosted transparency &amp; blur density</p>
-            <div className="pop-slider-wrap">
-              <input
-                type="range"
-                suppressHydrationWarning
-                min={0}
-                max={1}
-                step={0.01}
-                value={tint}
-                tabIndex={settingsOpen ? 0 : -1}
-                aria-label="Glass tint percentage"
-                style={{ ["--p" as any]: `${tint * 100}%` }}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  setTint(v);
-                  applyTint(v);
-                }}
-              />
-            </div>
-            <div className="pop-scale">
-              <span>0% Clear</span>
-              <span>100% Frosted</span>
-            </div>
-          </div>
-
-          {/* Reset button if tint altered */}
-          {Math.round(tint * 100) !== 35 && (
             <button
               type="button"
-              className="pop-reset-btn pressable"
-              onClick={resetTint}
+              className={`pop-seg-btn pressable${theme === "dark" ? " active" : ""}`}
+              onClick={() => changeTheme("dark")}
             >
-              Reset to default (35%)
+              <MoonIcon size={14} /> Dark
             </button>
-          )}
+            <button
+              type="button"
+              className={`pop-seg-btn pressable${theme === "system" ? " active" : ""}`}
+              onClick={() => changeTheme("system")}
+            >
+              Auto
+            </button>
+          </div>
+        </div>
+
+        {/* Liquid Glass slider */}
+        <div className="pop-section">
+          <label className="pop-section-label">Liquid Glass</label>
+          <input
+            type="range"
+            suppressHydrationWarning
+            min={0}
+            max={1}
+            step={0.01}
+            value={tint}
+            tabIndex={settingsOpen ? 0 : -1}
+            aria-label="Glass tint, from clear to tinted"
+            style={{ ["--p" as any]: `${tint * 100}%` }}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              setTint(v);
+              applyTint(v);
+            }}
+          />
+          <div className="pop-scale">
+            <span>Clear</span>
+            <span>Tinted</span>
+          </div>
         </div>
       </div>
     </header>
   );
 }
-

@@ -85,15 +85,11 @@ export default function TopBar() {
   return (
     <header className={`topbar${scrolled ? " scrolled" : ""}`}>
       <div className="topbar-in">
-        {/* Left: Page title (hidden on home page to avoid duplicate brand header) */}
-        {path !== "/" ? (
-          <Link href="/" className="topbar-brand" aria-label="Go to home">
-            <span className="brand-dot" aria-hidden />
-            <span className="brand-text">{title}</span>
-          </Link>
-        ) : (
-          <div className="topbar-brand-spacer" aria-hidden />
-        )}
+        {/* Left: Page title and brand */}
+        <Link href="/" className="topbar-brand" aria-label="FindMySong Home">
+          <span className="brand-dot" aria-hidden />
+          <span className="brand-text">{title}</span>
+        </Link>
 
         <div className="topbar-actions">
           {/* Single clean Settings button on the right */}

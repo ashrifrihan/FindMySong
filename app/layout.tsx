@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import TopBar from "@/components/TopBar";
 import TabBar from "@/components/TabBar";
+import AmbientBackground from "@/components/AmbientBackground";
+import Player from "@/components/Player";
+import { PlayerProvider } from "@/lib/player";
 import { tintBootScript, themeBootScript } from "@/lib/appearance";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
   title: "FindMySong",
@@ -25,16 +25,19 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Run before paint: restore tint + theme from localStorage to avoid flash */}
         <script dangerouslySetInnerHTML={{ __html: themeBootScript + tintBootScript }} />
       </head>
       <body>
-        <div className="wallpaper" aria-hidden><i /><i /><i /><i /></div>
-        <TopBar />
-        <main className="wrap">{children}</main>
-        <TabBar />
+        <PlayerProvider>
+          <AmbientBackground />
+          <TopBar />
+          <main className="wrap">{children}</main>
+          <Player />
+          <TabBar />
+        </PlayerProvider>
       </body>
     </html>
   );

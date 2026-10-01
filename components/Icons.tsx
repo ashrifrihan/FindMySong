@@ -79,3 +79,19 @@ export const SettingsIcon = ({ size, className, style }: P) => (
     <line x1="17" y1="16" x2="23" y2="16" />
   </svg>
 );
+export const VolumeIcon = ({ size, className, style }: P) => (
+  <svg {...base(size, className, style)} strokeWidth={1.9}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></svg>
+);
+export const VolumeMuteIcon = ({ size, className, style }: P) => (
+  <svg {...base(size, className, style)} strokeWidth={1.9}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
+);
+export const RepeatIcon = ({ size, className, style }: P) => (
+  <svg {...base(size, className, style)} strokeWidth={1.9}><polyline points="17 1 21 5 17 9" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><polyline points="7 23 3 19 7 15" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>
+);
+export const ChevronUpIcon = ({ size, className, style }: P) => (
+  <svg {...base(size, className, style)} strokeWidth={2}><path d="m18 15-6-6-6 6" /></svg>
+);
+export const CloseIcon = ({ size, className, style }: P) => (
+  <svg {...base(size, className, style)} strokeWidth={2}><path d="M18 6 6 18M6 6l12 12" /></svg>
+);
+

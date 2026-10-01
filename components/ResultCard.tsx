@@ -14,8 +14,6 @@ import {
 } from "./Icons";
 import { splitTitle } from "@/lib/displayTitle";
 
-// Only one preview plays at a time.
-let currentAudio: HTMLAudioElement | null = null;
 
 async function copyText(text: string) {
   try {
@@ -35,6 +33,8 @@ async function copyText(text: string) {
   }
 }
 
+import { usePlayer } from "@/lib/player";
+
 export default function ResultCard({
   item,
   query = "",
@@ -42,18 +42,17 @@ export default function ResultCard({
   item: Result;
   query?: string;
 }) {
+  const { track, isPlaying, playTrack } = usePlayer();
   const [code, setCode] = useState<string | null>(item.code || null);
   const [year, setYear] = useState<string | undefined>(item.year);
   const [fetchingCode, setFetchingCode] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [playing, setPlaying] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
   const [copiedVersionKey, setCopiedVersionKey] = useState<string | null>(null);
-  const [playingVersionKey, setPlayingVersionKey] = useState<string | null>(null);
 
-  const audio = useRef<HTMLAudioElement | null>(null);
-  const versionAudio = useRef<HTMLAudioElement | null>(null);
+  const playing = track?.key === item.key && isPlaying;
+
 
   useEffect(() => {
     setCode(item.code || null);
@@ -67,12 +66,6 @@ export default function ResultCard({
     return off;
   }, [item.key]);
 
-  useEffect(() => {
-    return () => {
-      audio.current?.pause();
-      versionAudio.current?.pause();
-    };
-  }, []);
 
   async function handleCopy(targetItem: Result, isSubVersion = false) {
     if (!targetItem.code) return;
@@ -138,44 +131,12 @@ export default function ResultCard({
 
   function onPlay() {
     if (!item.preview) return;
-    if (versionAudio.current) versionAudio.current.pause();
-
-    if (!audio.current) {
-      audio.current = new Audio(item.preview);
-      audio.current.onended = () => setPlaying(false);
-      audio.current.onpause = () => setPlaying(false);
-      audio.current.onplay = () => setPlaying(true);
-    }
-
-    if (playing) {
-      audio.current.pause();
-    } else {
-      if (currentAudio && currentAudio !== audio.current) currentAudio.pause();
-      currentAudio = audio.current;
-      audio.current.play().catch(() => {});
-    }
+    playTrack(item);
   }
 
   function onPlayVersion(v: Result) {
     if (!v.preview) return;
-    if (audio.current) audio.current.pause();
-
-    if (playingVersionKey === v.key && versionAudio.current) {
-      versionAudio.current.pause();
-      setPlayingVersionKey(null);
-      return;
-    }
-
-    if (versionAudio.current) versionAudio.current.pause();
-    const a = new Audio(v.preview);
-    versionAudio.current = a;
-    a.onended = () => setPlayingVersionKey(null);
-    a.onpause = () => setPlayingVersionKey(null);
-    a.onplay = () => setPlayingVersionKey(v.key);
-
-    if (currentAudio && currentAudio !== a) currentAudio.pause();
-    currentAudio = a;
-    a.play().catch(() => {});
+    playTrack(v);
   }
 
   const { name: cleanTitle, movie } = splitTitle(item.title);
@@ -350,7 +311,7 @@ export default function ResultCard({
           <ul className="rc-versions-list">
             {otherVersions.map((v) => {
               const vCopied = copiedVersionKey === v.key;
-              const vPlaying = playingVersionKey === v.key;
+              const vPlaying = track?.key === v.key && isPlaying;
 
               return (
                 <li key={v.key} className="rc-version-item">
